@@ -45,15 +45,7 @@ CREATE TABLE IF NOT EXISTS `post_shares` (
 --    Keep the earliest row for each pair.
 -- ---------------------------------------------------------------------------
 
-DELETE FROM activity_log  WHERE user_id = 3;
-DELETE FROM post_likes    WHERE user_id = 3;
-DELETE FROM comments      WHERE post_id IN (SELECT id FROM posts WHERE user_id = 3);
-DELETE FROM post_likes    WHERE post_id IN (SELECT id FROM posts WHERE user_id = 3);
-DELETE FROM posts         WHERE user_id = 3;
-DELETE FROM profiles      WHERE user_id = 3;
-DELETE FROM user_settings WHERE user_id = 3;
-
-
+INSERT INTO `users` (`id`, `username`, `first_name`, `last_name`, `city`, `state`, `email`, `password`, `bio`, `profile_pic`, `rating`, `created_at`, `banned`, `email_verified`, `verification_token`, `sport`, `position`, `goals`) VALUES (3, 'maria', NULL, NULL, NULL, NULL, 'maria@example.com', '$2y$12$52VIdEEWDkFRP2WHNhp/hO4w5flpcZnG31raZmX917AutW3Iqdtm2', NULL, NULL, 0, '2026-04-12 19:10:06', 0, 0, NULL, NULL, NULL, NULL);
 
 DELETE `a` FROM `post_likes` `a`
   JOIN `post_likes` `b`

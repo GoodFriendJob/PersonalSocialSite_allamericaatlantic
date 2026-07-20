@@ -13,7 +13,7 @@ return [
         'host'    => 'allamericaatlanticco.mydomaincommysql.com',
         'name'    => 'all_america_atlantic',
         'user'    => 'charlesf426',
-        'pass'    => 'YOUR_NEW_DB_PASSWORD',
+        'pass'    => 'Fletch426$',
         'charset' => 'utf8mb4',
     ],
     'mail' => [
@@ -28,6 +28,6 @@ return [
         'url'                        => 'https://allamericaatlantic.com',
         'debug'                      => false,   // MUST be false live
         'require_email_verification' => true,    // MUST be true live
-        'migration_token'            => 'paste-a-long-random-string-here',
+        'migration_token'            => 'test',
     ],
 ];
