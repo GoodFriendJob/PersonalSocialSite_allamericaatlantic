@@ -6,38 +6,8 @@ class StoryController {
        IMAGE THUMBNAIL FUNCTION
     -------------------------- */
     private static function createThumbnail($sourcePath, $destPath, $maxWidth = 300) {
-        $info = getimagesize($sourcePath);
-        if (!$info) return false;
-
-        list($width, $height) = $info;
-        $ratio = $height / $width;
-
-       $newWidth  = (int)$maxWidth;
-       $newHeight = (int)round($maxWidth * $ratio);
-
-        switch ($info['mime']) {
-            case 'image/jpeg':
-                $src = imagecreatefromjpeg($sourcePath);
-                break;
-            case 'image/png':
-                $src = imagecreatefrompng($sourcePath);
-                break;
-            case 'image/gif':
-                $src = imagecreatefromgif($sourcePath);
-                break;
-            default:
-                return false;
-        }
-
-        $thumb = imagecreatetruecolor($newWidth, $newHeight);
-        imagecopyresampled($thumb, $src, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
-
-        imagejpeg($thumb, $destPath, 80);
-
-        imagedestroy($src);
-        imagedestroy($thumb);
-
-        return true;
+        // Delegates to Media so GD availability is handled in one place.
+        return Media::thumbnail($sourcePath, $destPath, (int)$maxWidth);
     }
 
     /* -------------------------
@@ -111,10 +81,7 @@ public static function create($params) {
     /* -------------------------
        SAVE MEDIA FILE
     -------------------------- */
-    $uploadDir = __DIR__ . '/../public/uploads/stories';
-    if (!is_dir($uploadDir)) {
-        mkdir($uploadDir, 0755, true);
-    }
+    $uploadDir = Media::dir('stories');
 
     $filename = 'story_' . $user['id'] . '_' . time() . '.' . $ext;
     $path     = $uploadDir . '/' . $filename;
@@ -124,11 +91,11 @@ public static function create($params) {
         return;
     }
 
-    $mediaUrl = '/uploads/stories/' . $filename;
+    $mediaUrl = Media::url('stories', $filename);
 
     /* -------------------------
        THUMBNAIL HANDLING
-       (NO FFMPEG — FRONTEND PROVIDES BASE64)
+       (NO FFMPEG ï¿½ FRONTEND PROVIDES BASE64)
     -------------------------- */
     $thumbnailUrl = null;
 
@@ -136,7 +103,7 @@ public static function create($params) {
     if ($isImage) {
         $thumbName = 'thumb_' . $filename;
         $thumbPath = $uploadDir . '/' . $thumbName;
-        $thumbnailUrl = '/uploads/stories/' . $thumbName;
+        $thumbnailUrl = Media::url('stories', $thumbName);
 
         self::createThumbnail($path, $thumbPath);
     }
@@ -148,7 +115,7 @@ public static function create($params) {
         if ($thumbnailBase64) {
             $thumbName = 'thumb_' . $filename . '.jpg';
             $thumbPath = $uploadDir . '/' . $thumbName;
-            $thumbnailUrl = '/uploads/stories/' . $thumbName;
+            $thumbnailUrl = Media::url('stories', $thumbName);
 
             // Extract Base64 data
             $thumbnailData = explode(',', $thumbnailBase64)[1] ?? null;

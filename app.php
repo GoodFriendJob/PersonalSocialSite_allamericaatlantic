@@ -1,6 +1,9 @@
 <?php
-session_start();
-if (!isset($_SESSION["user_id"])) {
+require_once __DIR__ . '/app/core/Session.php';
+
+Session::start();
+
+if (Session::userId() === null) {
     header("Location: login.html");
     exit;
 }
@@ -14,7 +17,8 @@ if ($__app_base === "." || $__app_base === "/") {
 <head>
     <meta charset="UTF-8">
     <title>All American Network</title>
-    <link rel="stylesheet" href="app.css">
+    <link rel="stylesheet" href="assets/css/app.css">
+    <link rel="stylesheet" href="assets/css/feed.css">
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -187,82 +191,50 @@ if ($__app_base === "." || $__app_base === "/") {
     <!-- ========== CENTER FEED ========== -->
     <main class="center-feed">
 
-        <!-- Sports Tabs -->
-        <div class="sports-tabs">
-            <button class="tab active">All Sports</button>
-            <button class="tab">Football</button>
-            <button class="tab">Basketball</button>
-            <button class="tab">Baseball</button>
-            <button class="tab">Soccer</button>
-            <button class="tab">Hockey</button>
-            <button class="tab">Tennis</button>
-            <button class="tab">Golf</button>
-            <button class="tab">Track & Field</button>
-            <button class="tab">Wrestling</button>
-            <button class="tab">Volleyball</button>
-        </div>
+        <!-- Sport / blog categories (rendered from the categories API) -->
+        <div class="sports-tabs" id="category-tabs"></div>
 
-        <!-- Stories / Feed toggle -->
-        <div class="feed-toggle">
-            <button class="toggle-btn active">Feed</button>
-            <button class="toggle-btn active">Stories</button>
-        </div>
-
-        <!-- Stories area (hidden by default, we can wire later with JS) -->
+        <!-- Stories -->
         <section class="stories-panel">
-            <p>Stories from your network will show here (videos, photos, reels).</p>
+            <div id="story-bar" class="story-bar"></div>
+        </section>
+
+        <!-- Composer -->
+        <section class="composer-panel">
+            <form id="composer-form" class="composer">
+                <input type="text" id="composer-title" class="composer-input" placeholder="Title (optional)">
+
+                <textarea id="composer-content" class="composer-input" rows="3"
+                          placeholder="Share your All American moment..." required></textarea>
+
+                <div id="composer-preview" class="composer-preview"></div>
+
+                <div class="composer-actions">
+                    <label class="composer-file">
+                        <input type="file" id="composer-media" accept="image/*,video/*" multiple hidden>
+                        <span>Photo / Video</span>
+                    </label>
+
+                    <select id="composer-category" class="composer-visibility">
+                        <option value="">No category</option>
+                    </select>
+
+                    <select id="composer-visibility" class="composer-visibility">
+                        <option value="public">Public</option>
+                        <option value="private">Private (only me)</option>
+                    </select>
+
+                    <button type="submit" class="btn-primary">Post</button>
+                </div>
+
+                <p id="composer-status" class="composer-status" style="display:none;"></p>
+            </form>
         </section>
 
         <!-- Posts feed -->
         <section class="posts-panel">
-
-            <article class="post-card">
-                <header class="post-header">
-                    <div class="post-user">
-                        <div class="avatar">JW</div>
-                        <div>
-                            <h3 class="post-author">Jordan Walker</h3>
-                            <p class="post-meta">Varsity • 4.8 avg • 2h ago</p>
-                        </div>
-                    </div>
-                    <span class="post-tag">Friday Night Lights</span>
-                </header>
-
-                <p class="post-caption js-link-mentions">
-                    Corner route, 4th & goal. Trusted the work, trusted the QB.
-                    Shoutout to @charles_test for the scout notes. All American moments are built on days like this.
-                </p>
-
-                <div class="post-media-wrapper">
-                    <img src="https://images.unsplash.com/photo-1518604666860-9ed391f76460?auto=format&fit=crop&w=1400&q=80"
-                         class="post-media" alt="Highlight">
-                </div>
-
-                <div class="post-rating-row">
-                    <span class="rating-label">Community Rating:</span>
-                    <span class="rating-stars">★★★★☆</span>
-                </div>
-
-                <div class="post-actions">
-                    <button class="post-btn active">Comment</button>
-                    <button class="post-btn active">Share</button>
-                    <button class="post-btn active">Save</button>
-                    <button class="post-btn active">Message</button>
-                </div>
-
-                <div class="post-comments">
-                    <div class="comment-row">
-                        <div class="avatar-small">SC</div>
-                        <div>
-                            <p class="comment-author">Scout Central</p>
-                            <p class="comment-text js-link-mentions">
-                                Route discipline, separation, and hands. Ask @fletch if you want a second look.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </article>
-
+            <div id="feed-list"></div>
+            <div id="feed-pagination" class="feed-pagination"></div>
         </section>
 
     </main>
@@ -277,6 +249,8 @@ if ($__app_base === "." || $__app_base === "/") {
     </div>
     
     <!-- Added missing dynamic list container -->
+    <div id="friend-requests" class="friend-requests"></div>
+
     <ul id="friendsList" class="friends-list">
         <li class="loading-friends">Loading network...</li>
     </ul>
@@ -298,7 +272,9 @@ if ($__app_base === "." || $__app_base === "/") {
 </div> <!-- end layout -->
 </div>  <!-- end app-shell -->
 <script>window.__APP_BASE__ = <?= json_encode($__app_base, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;</script>
+<script src="assets/js/api.js"></script>
 <script src="assets/js/main.js"></script>
+<script src="assets/js/feed.js"></script>
 <script src="assets/js/network-friends.js"></script>
 
 </body>

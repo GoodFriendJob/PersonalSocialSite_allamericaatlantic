@@ -3,6 +3,22 @@
 class PostController {
 
     /* -------------------------
+       MEDIA HELPERS
+
+       These were called from the upload paths below but never defined, so
+       every post that included an image or video died with "Call to
+       undefined method PostController::createThumbnail()". Both now delegate
+       to Media, which degrades gracefully when GD or ffmpeg is missing.
+    -------------------------- */
+    private static function createThumbnail($sourcePath, $destPath, $maxWidth = 600) {
+        return Media::thumbnail($sourcePath, $destPath, (int)$maxWidth);
+    }
+
+    private static function createVideoThumbnail($videoPath, $thumbPath) {
+        return Media::videoThumbnail($videoPath, $thumbPath);
+    }
+
+    /* -------------------------
        LIST POSTS (WITH MEDIA)
     -------------------------- */
    public static function index($params) {
@@ -10,21 +26,64 @@ class PostController {
 
     list($page, $limit, $offset) = Pagination::getPageLimit();
 
+    // Guests may browse public posts, so auth is optional here.
+    $me   = AuthMiddleware::user();
+    $meId = $me['id'] ?? 0;
+
+    // Optional category filter, driven by the sport tabs in the feed.
+    $categoryId = isset($_GET['category_id']) && $_GET['category_id'] !== ''
+        ? (int)$_GET['category_id']
+        : null;
+
+    $categoryClause = $categoryId ? ' AND p.category_id = :cat' : '';
+
+    // Total matching rows, so the client knows whether more pages exist.
+    $countStmt = $pdo->prepare(
+        "SELECT COUNT(*) FROM posts p
+          WHERE (p.visibility = 'public' OR p.user_id = :me0)" . $categoryClause
+    );
+    $countStmt->bindValue(':me0', $meId, PDO::PARAM_INT);
+    if ($categoryId) $countStmt->bindValue(':cat', $categoryId, PDO::PARAM_INT);
+    $countStmt->execute();
+    $total = (int)$countStmt->fetchColumn();
+
     $stmt = $pdo->prepare(
-        "SELECT p.id, p.content, p.created_at, u.username,
-                (SELECT COUNT(*) FROM post_likes pl WHERE pl.post_id = p.id) AS likes,
-                (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) AS comment_count
+        "SELECT p.id, p.user_id, p.title, p.content, p.created_at, p.visibility,
+                p.category_id, c.name AS category_name,
+                u.username, u.profile_pic,
+                (SELECT COUNT(*) FROM post_likes pl  WHERE pl.post_id = p.id) AS likes,
+                (SELECT COUNT(*) FROM comments c     WHERE c.post_id  = p.id) AS comment_count,
+                (SELECT COUNT(*) FROM post_shares ps WHERE ps.post_id = p.id) AS share_count,
+                EXISTS(SELECT 1 FROM post_likes  pl2 WHERE pl2.post_id = p.id AND pl2.user_id = :me1) AS is_liked,
+                EXISTS(SELECT 1 FROM saved_posts sp  WHERE sp.post_id  = p.id AND sp.user_id  = :me2) AS is_saved
          FROM posts p
          JOIN users u ON u.id = p.user_id
+         LEFT JOIN categories c ON c.id = p.category_id
+         WHERE (p.visibility = 'public' OR p.user_id = :me3)" . $categoryClause . "
          ORDER BY p.created_at DESC
-         LIMIT ? OFFSET ?"
+         LIMIT :lim OFFSET :off"
     );
 
-    $stmt->bindValue(1, $limit, PDO::PARAM_INT);
-    $stmt->bindValue(2, $offset, PDO::PARAM_INT);
+    $stmt->bindValue(':me1', $meId, PDO::PARAM_INT);
+    $stmt->bindValue(':me2', $meId, PDO::PARAM_INT);
+    $stmt->bindValue(':me3', $meId, PDO::PARAM_INT);
+    if ($categoryId) $stmt->bindValue(':cat', $categoryId, PDO::PARAM_INT);
+    $stmt->bindValue(':lim', $limit, PDO::PARAM_INT);
+    $stmt->bindValue(':off', $offset, PDO::PARAM_INT);
     $stmt->execute();
 
     $posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Normalize the flags MySQL returns as 0/1 strings.
+    foreach ($posts as &$p) {
+        $p['is_liked']      = (bool)$p['is_liked'];
+        $p['is_saved']      = (bool)$p['is_saved'];
+        $p['likes']         = (int)$p['likes'];
+        $p['comment_count'] = (int)$p['comment_count'];
+        $p['share_count']   = (int)$p['share_count'];
+        $p['is_mine']       = ((int)$p['user_id'] === $meId);
+    }
+    unset($p);
 
     /* Load images + videos for each post */
     foreach ($posts as &$post) {
@@ -49,9 +108,13 @@ class PostController {
     }
 
     Response::success([
-        'page'  => $page,
-        'limit' => $limit,
-        'posts' => $posts
+        'page'        => $page,
+        'limit'       => $limit,
+        'total'       => $total,
+        'total_pages' => (int)ceil($total / $limit),
+        'has_more'    => ($offset + count($posts)) < $total,
+        'category_id' => $categoryId,
+        'posts'       => $posts
     ]);
 }
 
@@ -124,13 +187,30 @@ class PostController {
     }
 
     /* -------------------------
+       OPTIONAL FIELDS
+    -------------------------- */
+    $title      = trim($json['title']      ?? $_POST['title']      ?? '');
+    $visibility = trim($json['visibility'] ?? $_POST['visibility'] ?? 'public');
+    $categoryId = $json['category_id'] ?? $_POST['category_id'] ?? null;
+
+    if (!in_array($visibility, ['public', 'private'], true)) {
+        $visibility = 'public';
+    }
+
+    /* -------------------------
        INSERT POST
     -------------------------- */
     $stmt = $pdo->prepare(
-        "INSERT INTO posts (user_id, content, created_at)
-         VALUES (?, ?, NOW())"
+        "INSERT INTO posts (user_id, category_id, title, content, visibility, created_at)
+         VALUES (?, ?, ?, ?, ?, NOW())"
     );
-    $stmt->execute([$user['id'], $content]);
+    $stmt->execute([
+        $user['id'],
+        $categoryId !== null && $categoryId !== '' ? (int)$categoryId : null,
+        $title !== '' ? $title : null,
+        $content,
+        $visibility,
+    ]);
 
     $id = (int)$pdo->lastInsertId();
 
@@ -153,19 +233,18 @@ class PostController {
             $ext = pathinfo($files['name'][$i], PATHINFO_EXTENSION);
             $filename = 'post_' . $id . '_' . time() . '_' . $i . '.' . $ext;
 
-            $uploadDir = __DIR__ . '/../public/post_images';
-            if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
+            $uploadDir = Media::dir('posts');
 
             $path = $uploadDir . '/' . $filename;
 
             if (move_uploaded_file($files['tmp_name'][$i], $path)) {
 
-                $imageUrl = '/post_images/' . $filename;
+                $imageUrl = Media::url('posts', $filename);
 
                 // Thumbnail
                 $thumbName = 'thumb_' . $filename;
                 $thumbPath = $uploadDir . '/' . $thumbName;
-                $thumbUrl  = '/post_images/' . $thumbName;
+                $thumbUrl  = Media::url('posts', $thumbName);
 
                 self::createThumbnail($path, $thumbPath);
 
@@ -199,19 +278,18 @@ class PostController {
         $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
         $filename = 'video_' . $id . '_' . time() . '.' . $ext;
 
-        $uploadDir = __DIR__ . '/../public/post_videos';
-        if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
+        $uploadDir = Media::dir('videos');
 
         $path = $uploadDir . '/' . $filename;
 
         if (move_uploaded_file($file['tmp_name'], $path)) {
 
-            $videoUrl = '/post_videos/' . $filename;
+            $videoUrl = Media::url('videos', $filename);
 
             // Thumbnail
             $thumbName = 'thumb_' . $filename . '.jpg';
             $thumbPath = $uploadDir . '/' . $thumbName;
-            $thumbUrl  = '/post_videos/' . $thumbName;
+            $thumbUrl  = Media::url('videos', $thumbName);
 
             self::createVideoThumbnail($path, $thumbPath);
 
@@ -226,9 +304,11 @@ class PostController {
     ActivityLogger::log($user['id'], 'create_post', $id, 'post');
 
     Response::success([
-        'id'      => $id,
-        'user_id' => (int)$user['id'],
-        'content' => $content
+        'id'         => $id,
+        'user_id'    => (int)$user['id'],
+        'content'    => $content,
+        'title'      => $title !== '' ? $title : null,
+        'visibility' => $visibility,
     ]);
 }
 

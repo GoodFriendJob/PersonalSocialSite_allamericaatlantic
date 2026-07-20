@@ -16,12 +16,18 @@ require_once __DIR__ . '/../controllers/AdminDashboardController.php';
 require_once __DIR__ . '/../controllers/ReportController.php';
 require_once __DIR__ . '/../controllers/StoryController.php';
 require_once __DIR__ . '/../controllers/ProfileController.php';
+require_once __DIR__ . '/../controllers/FriendController.php';
+require_once __DIR__ . '/../controllers/SaveController.php';
+require_once __DIR__ . '/../controllers/ShareController.php';
+require_once __DIR__ . '/../controllers/CategoryController.php';
 
 /* -------------------------
    AUTH
 --------------------------*/
 $router->add('POST', 'auth/register', ['AuthController', 'register']);
 $router->add('POST', 'auth/login',    ['AuthController', 'login']);
+$router->add('POST', 'auth/logout',   ['AuthController', 'logout']);
+$router->add('GET',  'auth/me',       ['AuthController', 'me']);
 
 /* -------------------------
    STORIES
@@ -96,12 +102,35 @@ $router->add('POST', 'posts/{id}/comments', ['CommentController', 'addComment'])
 $router->add('POST', 'posts/{postId}/comments/{commentId}/reply', ['CommentController', 'replyToComment']);
 $router->add('DELETE', 'comments/{id}', ['CommentController', 'delete']);
 
+/* -------------------------
+   SAVE / SHARE
+--------------------------*/
+$router->add('POST',   'posts/{id}/save',   ['SaveController',  'save']);
+$router->add('DELETE', 'posts/{id}/save',   ['SaveController',  'unsave']);
+$router->add('GET',    'me/saved',          ['SaveController',  'index']);
 
-// Add a comment
-$router->add('POST', '/posts/{id}/comments', ['CommentController', 'addComment']);
+$router->add('POST',   'posts/{id}/share',  ['ShareController', 'share']);
+$router->add('GET',    'posts/{id}/shares', ['ShareController', 'index']);
 
-// Reply to a comment
-$router->add('POST', '/posts/{postId}/comments/{commentId}/reply', ['CommentController', 'replyToComment']);
+/* -------------------------
+   CATEGORIES
+--------------------------*/
+$router->add('GET',    'categories',      ['CategoryController', 'index']);
+$router->add('POST',   'categories',      ['CategoryController', 'create']);
+$router->add('DELETE', 'categories/{id}', ['CategoryController', 'delete']);
+
+/* -------------------------
+   FRIENDS
+   Literal paths are registered before the {id} ones so that
+   "friends/search" is never swallowed by a parameter pattern.
+--------------------------*/
+$router->add('GET',    'friends/search',        ['FriendController', 'search']);
+$router->add('GET',    'friends/pending',       ['FriendController', 'pending']);
+$router->add('GET',    'friends',               ['FriendController', 'index']);
+$router->add('POST',   'friends/{id}/request',  ['FriendController', 'request']);
+$router->add('POST',   'friends/{id}/accept',   ['FriendController', 'accept']);
+$router->add('POST',   'friends/{id}/decline',  ['FriendController', 'decline']);
+$router->add('DELETE', 'friends/{id}',          ['FriendController', 'remove']);
 
 /* -------------------------
    USERS

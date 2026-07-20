@@ -93,10 +93,7 @@ class ProfileController {
         $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
         $filename = 'avatar_' . $user['id'] . '_' . time() . '.' . $ext;
 
-        $uploadDir = __DIR__ . '/../public/avatars';
-        if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0755, true);
-        }
+        $uploadDir = Media::dir('avatars');
 
         $path = $uploadDir . '/' . $filename;
 
@@ -105,11 +102,15 @@ class ProfileController {
             return;
         }
 
-        $avatarUrl = '/avatars/' . $filename;
+        $avatarUrl = Media::url('avatars', $filename);
 
-        // Delete old avatar file if it exists
-        if ($oldAvatar && file_exists(__DIR__ . '/../public' . $oldAvatar)) {
-            unlink(__DIR__ . '/../public' . $oldAvatar);
+        // Delete old avatar file if it exists. Stored urls are relative to the
+        // project root; older rows may still carry a leading slash.
+        if ($oldAvatar) {
+            $oldPath = Media::root() . '/' . ltrim($oldAvatar, '/');
+            if (is_file($oldPath)) {
+                unlink($oldPath);
+            }
         }
 
         // Save new avatar

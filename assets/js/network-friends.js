@@ -1,130 +1,245 @@
-// Java Document// js/network-sidebar.js
+/**
+ * Right sidebar: friend list, search, requests.
+ *
+ * The previous version called app/routes/search_users.php, get_friends.php and
+ * send_request.php. The first two were fatal on load (require 'config.php',
+ * which does not exist) and the third was never written. All three are now
+ * replaced by FriendController routes.
+ */
+(function () {
+  "use strict";
 
-document.addEventListener("DOMContentLoaded", () => {
-    // 1. Run your active friends list loader right away
-    fetchFriendsNetwork(); 
+  const friendsList = document.getElementById("friendsList");
+  const searchInput = document.getElementById("friend-search-input");
+  const dropdown = document.getElementById("search-results-dropdown");
+  const addBtn = document.getElementById("add-friend-submit-btn");
+  const countEl = document.getElementById("onlineCount");
+  const requestsList = document.getElementById("friend-requests");
 
-    const searchInput = document.getElementById('friend-search-input');
-    const resultsDropdown = document.getElementById('search-results-dropdown');
+  if (!friendsList) return;
 
-    // 2. Listen for dynamic live typing in the search input box
-    searchInput.addEventListener('input', debounce(async function(e) {
-        const query = e.target.value.trim();
-        
-        if (query.length < 2) {
-            resultsDropdown.innerHTML = '';
-            resultsDropdown.style.display = 'none';
-            return;
-        }
+  loadFriends();
+  loadRequests();
 
-        try {
-            const response = await fetch(`app/routes/search_users.php?q=${encodeURIComponent(query)}`);
-            const data = await response.json();
-
-            resultsDropdown.innerHTML = '';
-
-            if (data.success && data.users && data.users.length > 0) {
-                resultsDropdown.style.display = 'block';
-                
-                data.users.forEach(user => {
-                    const li = document.createElement('li');
-                    li.style.cssText = "display:flex; justify-content:space-between; align-items:center; padding:8px 12px; border-bottom:1px solid #eee;";
-                    li.innerHTML = `
-                        <span style="color:#333; font-weight:bold;">@${user.username}</span>
-                        <button class="send-req-btn" data-id="${user.id}" style="background:#003366; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:12px;">Add</button>
-                    `;
-                    resultsDropdown.appendChild(li);
-                });
-
-                attachRequestButtonListeners();
-            } else {
-                resultsDropdown.style.display = 'block';
-                resultsDropdown.innerHTML = '<li style="padding:8px 12px; color:#666; font-size:14px;">No members found</li>';
-            }
-        } catch (error) {
-            console.error("Error searching for network profiles:", error);
-        }
-    }, 300));
-});
-
-// 3. Fetch active friends network from the database
-async function fetchFriendsNetwork() {
+  /* ===================== FRIEND LIST ===================== */
+  async function loadFriends() {
     try {
-        const response = await fetch('app/routes/get_friends.php');
-        if (!response.ok) throw new Error("Network status update failed: " + response.status);
-        const data = await response.json();
-        const friendsList = document.getElementById('friendsList');
-        let onlineCounter = 0;
-        
-        if (data.success && data.friends && data.friends.length > 0) {
-            friendsList.innerHTML = '';
-            data.friends.forEach(friend => {
-                if (friend.is_online) onlineCounter++;
-                const statusClass = friend.is_online ? 'online' : 'offline';
-                const statusText = friend.is_online ? 'Active Now' : 'Offline';
-                const initial = friend.username.charAt(0).toUpperCase();
-                friendsList.innerHTML += `
-                    <li class="friend-item">
-                        <div class="avatar-container">
-                            <div class="avatar">${initial}</div>
-                            <div class="status-indicator ${statusClass}"></div>
-                        </div>
-                        <div class="friend-info">
-                            <h4>${friend.username}</h4>
-                            <p>${statusText}</p>
-                        </div>
-                    </li>
-                `;
-            });
-            document.getElementById('onlineCount').innerText = `${onlineCounter} Online`;
-        } else {
-            friendsList.innerHTML = '<li class="loading-friends">No friends in your network yet.</li>';
-        }
-    } catch (error) {
-        console.error("Error fetching friends network:", error);
-        const friendsList = document.getElementById('friendsList');
-        if (friendsList) friendsList.innerHTML = '<li class="loading-friends">Error loading network. Check console.</li>';
+      const data = await Api.get("friends");
+      renderFriends(data.friends || []);
+    } catch (err) {
+      friendsList.innerHTML = '<li class="loading-friends">Could not load your network.</li>';
     }
-}
+  }
 
-// 4. Action function to send the friend request payload
-function attachRequestButtonListeners() {
-    document.querySelectorAll('.send-req-btn').forEach(btn => {
-        btn.addEventListener('click', async function() {
-            const receiverId = this.getAttribute('data-id');
-            this.disabled = true;
-            this.textContent = 'Sending...';
+  function renderFriends(friends) {
+    if (countEl) countEl.textContent = friends.length + " friends";
 
-            try {
-                const response = await fetch('app/routes/send_request.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ receiver_id: receiverId })
-                });
-                const result = await response.json();
+    if (!friends.length) {
+      friendsList.innerHTML = '<li class="loading-friends">No friends yet — search for someone below.</li>';
+      return;
+    }
 
-                if (response.ok && result.success) {
-                    this.textContent = 'Sent';
-                    this.style.background = '#6c757d';
-                } else {
-                    alert(result.error || 'Failed sending request.');
-                    this.disabled = false;
-                    this.textContent = 'Add';
-                }
-            } catch (error) {
-                console.error("Request execution failure:", error);
-                this.disabled = false;
-                this.textContent = 'Add';
-            }
-        });
+    friendsList.innerHTML = friends
+      .map(function (f) {
+        const name = [f.first_name, f.last_name].filter(Boolean).join(" ") || f.username;
+        const avatar = f.profile_pic
+          ? '<img class="friend-avatar" src="' + Api.escape(Api.assetUrl(f.profile_pic)) + '" alt="">'
+          : '<div class="avatar-small">' + Api.escape(f.username.slice(0, 2).toUpperCase()) + "</div>";
+
+        return (
+          '<li class="friend-row" data-user-id="' + f.id + '">' + avatar +
+            '<div class="friend-info">' +
+              '<p class="friend-name">' + Api.escape(name) + "</p>" +
+              '<p class="friend-role">@' + Api.escape(f.username) +
+                (f.sport ? " · " + Api.escape(f.sport) : "") + "</p>" +
+            "</div>" +
+            '<button class="friend-message-btn" data-message="' + f.id + '" type="button">Message</button>' +
+          "</li>"
+        );
+      })
+      .join("");
+
+    friendsList.querySelectorAll("[data-message]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        messageUser(btn.dataset.message);
+      });
     });
-}
+  }
 
-// 5. Helper function to throttle database queries while typing
-function debounce(func, delay) {
-    let timeout;
-    return function(...args) {
-        clearTimeout(timeout);
-        timeout = setTimeout(() => func.apply(this, args), delay);
+  /* =================== INCOMING REQUESTS ================== */
+  async function loadRequests() {
+    if (!requestsList) return;
+
+    try {
+      const data = await Api.get("friends/pending");
+      const requests = data.requests || [];
+
+      if (!requests.length) {
+        requestsList.innerHTML = "";
+        return;
+      }
+
+      requestsList.innerHTML =
+        '<h4 class="requests-title">Friend requests</h4>' +
+        requests
+          .map(function (r) {
+            const name = [r.first_name, r.last_name].filter(Boolean).join(" ") || r.username;
+            return (
+              '<div class="request-row" data-request="' + r.id + '">' +
+                '<span class="request-name">' + Api.escape(name) + "</span>" +
+                '<button class="request-accept" data-accept="' + r.id + '" type="button">Accept</button>' +
+                '<button class="request-decline" data-decline="' + r.id + '" type="button">Decline</button>' +
+              "</div>"
+            );
+          })
+          .join("");
+
+      requestsList.querySelectorAll("[data-accept]").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          respond(btn.dataset.accept, "accept");
+        });
+      });
+      requestsList.querySelectorAll("[data-decline]").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          respond(btn.dataset.decline, "decline");
+        });
+      });
+    } catch (err) {
+      requestsList.innerHTML = "";
+    }
+  }
+
+  async function respond(userId, action) {
+    try {
+      await Api.post("friends/" + userId + "/" + action);
+      loadRequests();
+      loadFriends();
+    } catch (err) {
+      alert("Could not " + action + " the request: " + err.message);
+    }
+  }
+
+  /* ======================== SEARCH ======================== */
+  if (searchInput) {
+    searchInput.addEventListener("input", debounce(runSearch, 300));
+  }
+
+  if (addBtn) {
+    addBtn.addEventListener("click", function () {
+      if (!searchInput.value.trim()) {
+        searchInput.focus();
+        return;
+      }
+      runSearch();
+    });
+  }
+
+  async function runSearch() {
+    const q = searchInput.value.trim();
+
+    if (q.length < 2) {
+      hideDropdown();
+      return;
+    }
+
+    try {
+      const data = await Api.get("friends/search", { q: q });
+      renderSearch(data.results || []);
+    } catch (err) {
+      dropdown.innerHTML = '<li class="search-empty">Search failed.</li>';
+      dropdown.style.display = "block";
+    }
+  }
+
+  function renderSearch(results) {
+    if (!results.length) {
+      dropdown.innerHTML = '<li class="search-empty">No users found.</li>';
+      dropdown.style.display = "block";
+      return;
+    }
+
+    dropdown.innerHTML = results
+      .map(function (u) {
+        const name = [u.first_name, u.last_name].filter(Boolean).join(" ") || u.username;
+        return (
+          '<li class="search-row">' +
+            '<span class="search-name">' + Api.escape(name) +
+              ' <span class="search-handle">@' + Api.escape(u.username) + "</span></span>" +
+            friendshipButton(u) +
+          "</li>"
+        );
+      })
+      .join("");
+
+    dropdown.style.display = "block";
+
+    dropdown.querySelectorAll("[data-add]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        sendRequest(btn.dataset.add, btn);
+      });
+    });
+  }
+
+  function friendshipButton(user) {
+    switch (user.friendship) {
+      case "accepted":
+        return '<span class="search-status">Friends</span>';
+      case "pending_sent":
+        return '<span class="search-status">Requested</span>';
+      case "pending_received":
+        return '<button class="search-add" data-add="' + user.id + '" type="button">Accept</button>';
+      case "blocked":
+        return '<span class="search-status">Blocked</span>';
+      default:
+        return '<button class="search-add" data-add="' + user.id + '" type="button">Add</button>';
+    }
+  }
+
+  async function sendRequest(userId, btn) {
+    btn.disabled = true;
+    try {
+      const res = await Api.post("friends/" + userId + "/request");
+      btn.outerHTML =
+        '<span class="search-status">' + (res.friendship === "accepted" ? "Friends" : "Requested") + "</span>";
+      loadFriends();
+      loadRequests();
+    } catch (err) {
+      alert(err.message);
+      btn.disabled = false;
+    }
+  }
+
+  function hideDropdown() {
+    if (!dropdown) return;
+    dropdown.innerHTML = "";
+    dropdown.style.display = "none";
+  }
+
+  document.addEventListener("click", function (e) {
+    if (dropdown && !dropdown.contains(e.target) && e.target !== searchInput && e.target !== addBtn) {
+      hideDropdown();
+    }
+  });
+
+  /* ======================== HELPERS ======================= */
+  async function messageUser(userId) {
+    const body = prompt("Send a message:");
+    if (!body) return;
+
+    try {
+      const thread = await Api.post("threads", { user_id: Number(userId) });
+      await Api.post("threads/" + thread.thread_id + "/messages", { content: body });
+      alert("Message sent.");
+    } catch (err) {
+      alert("Could not send message: " + err.message);
+    }
+  }
+
+  function debounce(fn, delay) {
+    let timer;
+    return function () {
+      clearTimeout(timer);
+      timer = setTimeout(fn, delay);
     };
-}
+  }
+})();

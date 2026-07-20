@@ -1,6 +1,7 @@
 <?php
 require __DIR__ . "/config/db.php";
-session_start();
+require_once __DIR__ . '/core/Session.php';
+Session::start();
 
 header("Content-Type: application/json");
 
