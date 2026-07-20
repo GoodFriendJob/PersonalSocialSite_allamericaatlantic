@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>All America Atlantic • All American Network</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="aaa-body gradient-mesh grain">
+  <!-- SECTION: App Shell -->
+  <div class="app-shell" data-view="main" style="display:none;">
+
+     <!-- SECTION: Header -->
+     <header class="aaa-header shadow-soft">
+      <div class="constitution-banner">Constitution • We the People</div>
+        <div class="header-brand">
+          <div class="brand-logo">
+            <div class="constitution-image" aria-hidden="true"></div>
+          </div>
+         <nav class="main-nav" aria-label="Primary">
+           <button class="nav-link is-active" type="button" data-view="general">All American Network</button>
+           <button class="nav-link" type="button" data-view="sports">All American Sports</button>
+           <button class="nav-link" type="button" data-view="dating">All American Dating</button>
+           <button class="nav-link" type="button" data-view="classifieds">All American Classifieds</button>
+         </nav>
+         <div class="brand-mark">AAA</div>
+          <nav class="secondary-nav" aria-label="Secondary">
+            <button class="nav-link" type="button" data-view="about">About</button>
+          </nav>
+          <div class="brand-text">
+          <p class="brand-super">All American • Best of the Best in Every Category</p>
+          <h1 class="brand-title">All America Atlantic</h1>
+           <p class="brand-tagline">Become an All American. Truth, character, and excellence in every lane.</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-ghost" type="button">?? Daily Goal</button>
+        <button class="btn btn-primary" type="button">+ New Highlight</button>
+      </div>
+    </header>
+
+    <!-- SECTION: About Page -->
+    <section class="about-page" data-view="about" style="display:none;">
+      <div class="about-card shadow-soft">
+        <h2 class="about-title">What it means to be All American</h2>
+        <p class="about-intro">On All America Atlantic, being All American is bigger than a stat line. It’s about who you are, how you live, and what you give back.</p>
+
+        <section class="about-section">
+          <h3 class="about-heading">1. Excellence and High Achievement</h3>
+          <ul class="about-list">
+            <li>Bring your best effort in whatever lane you choose: sports, video, dating, business, service, or leadership.</li>
+            <li>Treat every rep, project, or conversation like it matters, because it does.</li>
+            <li>Set real goals and chase them with discipline, not shortcuts.</li>
+            <li>Celebrate wins, but stay hungry to grow and improve.</li>
+          </ul>
+        </section>
+
+        <section class="about-section">
+          <h3 class="about-heading">2. Character and Values</h3>
+          <ul class="about-list">
+            <li>Stand for truth, even when it costs you likes, views, or attention.</li>
+            <li>Choose what is right over what is easy, trendy, or popular.</li>
+            <li>Show respect: to yourself, your family, your team, your community, and your country.</li>
+            <li>Own your mistakes, learn from them, and come back stronger.</li>
+          </ul>
+        </section>
+
+        <section class="about-section">
+          <h3 class="about-heading">3. Contribution and Impact</h3>
+          <ul class="about-list">
+            <li>Use your gifts to lift others up, not tear them down.</li>
+            <li>Tell stories, share news, and report truth in a way that helps people, not divides them.</li>
+            <li>Be the teammate, friend, partner, or leader others can count on.</li>
+            <li>Remember: We the People means all of us bringing our best to something bigger than ourselves.</li>
+          </ul>
+        </section>
+      </div>
+    </section>
+
+    <!-- SECTION: Main Layout -->
+    <main class="aaa-main">
+       <!-- SECTION: Profile Sidebar (General Network) -->
+      <aside class="sidebar profile-card shadow-soft gradient-border">
+        <div class="profile-banner"></div>
+         <div class="profile-core">
+           <div class="profile-avatar-ring">
+             <div class="profile-avatar" id="profile-avatar">AA</div>
+             <input id="profile-avatar-input" type="file" accept="image/*" class="profile-avatar-input" aria-label="Upload profile picture" />
+           </div>
+           <div class="profile-meta">
+
+            <h2 class="profile-name">Jordan Walker</h2>
+            <p class="profile-handle">@allamericanJW</p>
+            <p class="profile-role">Wide Receiver • Class of 2026</p>
+          </div>
+        </div>
+         <div class="profile-location">
+           <span id="profile-location-display">Hometown not set yet</span>
+         </div>
+         <div class="profile-stats">
+           <div class="stat">
+             <span class="stat-label">Highlights</span>
+             <span class="stat-value">24</span>
+           </div>
+
+          <div class="stat">
+            <span class="stat-label">Scouts Saved</span>
+            <span class="stat-value">17</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Rating</span>
+            <span class="stat-value">4.8</span>
+          </div>
+        </div>
+          <div class="profile-bio">
+            All American because you stand for truth, do what is right, and bring your best in every category.
+          </div>
+          <div class="profile-achievements" id="profile-achievements-display">
+            <h3 class="profile-achievements-title">Achievements</h3>
+            <p class="profile-achievements-empty">No achievements added yet.</p>
+          </div>
+          <button class="btn btn-ghost profile-edit-toggle" type="button" id="btn-edit-profile">Edit profile</button>
+
+      </aside>
+
+       <!-- SECTION: Feed & Composer (General Network) -->
+       <section class="feed-column">
+          <!-- General categories tabs (shown in General view) -->
+          <div class="general-categories" aria-label="All American categories">
+            <button class="general-tab is-active" type="button" data-category="all">All</button>
+            <button class="general-tab" type="button" data-category="categories">Categories</button>
+            <button class="general-tab" type="button" data-category="stories">Stories</button>
+            <button class="general-tab" type="button" data-category="news">News</button>
+            <button class="general-tab" type="button" data-category="reporter">Reporters</button>
+            <button class="general-tab" type="button" data-category="politicians">Politicians</button>
+          </div>
+
+          <!-- Post Composer -->
+         <section class="card composer-card shadow-soft" aria-label="Create a new post" data-view="general">
+           <h2 class="section-title">Share your All American moment</h2>
+          <form id="composer-form" class="composer-form">
+            <label class="field">
+               <span class="field-label">Caption</span>
+               <textarea id="post-caption" name="caption" rows="2" placeholder="Share your win, your work, or your why..." required></textarea>
+            </label>
+
+            <div class="composer-row">
+              <label class="field file-field">
+                <span class="field-label">Attach media</span>
+                <input id="post-media" type="file" accept="image/*,video/*" />
+                <div class="file-ui">
+                  <span class="file-icon">??</span>
+                   <span id="file-label" class="file-label">Upload video, photos, or moments</span>
+                </div>
+              </label>
+
+              <label class="field select-field">
+                 <span class="field-label">Rate this moment</span>
+                <select id="post-rating" name="rating">
+                  <option value="">No rating</option>
+                   <option value="1">1 • Just starting</option>
+                   <option value="2">2 • Solid step</option>
+                   <option value="3">3 • Strong move</option>
+                   <option value="4">4 • Big moment</option>
+                   <option value="5">5 • All American worthy</option>
+                </select>
+              </label>
+            </div>
+
+            <div id="media-preview" class="media-preview" aria-live="polite"></div>
+
+             <div class="composer-footer">
+               <p class="composer-hint">Every honest step, every creative idea, every right choice builds your All American story.</p>
+               <button class="btn btn-primary" type="submit">Post to your network</button>
+             </div>
+          </form>
+        </section>
+
+           <!-- Feed -->
+           <section class="feed" aria-label="Highlight feed" data-view="general">
+             <!-- Sports categories tabs (shown in Sports view) -->
+             <div class="sports-categories" aria-label="Sports categories">
+              <button class="sports-tab is-active" type="button" data-sport="all">All Sports</button>
+              <button class="sports-tab" type="button" data-sport="football">Football</button>
+              <button class="sports-tab" type="button" data-sport="basketball">Basketball</button>
+              <button class="sports-tab" type="button" data-sport="baseball">Baseball</button>
+              <button class="sports-tab" type="button" data-sport="soccer">Soccer</button>
+              <button class="sports-tab" type="button" data-sport="hockey">Hockey</button>
+              <button class="sports-tab" type="button" data-sport="tennis">Tennis</button>
+              <button class="sports-tab" type="button" data-sport="golf">Golf</button>
+              <button class="sports-tab" type="button" data-sport="track">Track & Field</button>
+              <button class="sports-tab" type="button" data-sport="wrestling">Wrestling</button>
+              <button class="sports-tab" type="button" data-sport="volleyball">Volleyball</button>
+              <button class="sports-tab" type="button" data-sport="horse-racing">Horse Racing</button>
+            </div>
+
+            <!-- Horse Racing subcategories (shown only when Horse Racing is active) -->
+            <div class="sports-subcategories" aria-label="Horse Racing subcategories">
+              <button class="sports-subtab is-active" type="button" data-subcategory="all">All Horse Racing</button>
+              <button class="sports-subtab" type="button" data-subcategory="jockey">Jockey</button>
+              <button class="sports-subtab" type="button" data-subcategory="trainer">Trainers</button>
+            </div>
+          <h2 class="visually-hidden">Main Feed</h2>
+           <article class="card post shadow-soft" data-initial="true" data-view="sports" data-sport="football">
+            <header class="post-header">
+              <div class="post-user">
+                <div class="avatar">JW</div>
+                <div>
+                  <h3 class="post-author">Jordan Walker</h3>
+                  <p class="post-meta">Varsity • 4.8? average • 2h ago</p>
+                </div>
+              </div>
+              <div class="post-tag">Friday Night Lights</div>
+            </header>
+            <p class="post-caption">Corner route, 4th & goal. Trusted the work, trusted the QB. All American moments are built on days like this.</p>
+            <div class="post-media sample-media"></div>
+            <div class="post-rating" aria-label="Post rating">
+              <button class="rating-star" type="button" data-value="1">?</button>
+              <button class="rating-star" type="button" data-value="2">?</button>
+              <button class="rating-star" type="button" data-value="3">?</button>
+              <button class="rating-star" type="button" data-value="4">?</button>
+              <button class="rating-star is-active" type="button" data-value="5">?</button>
+              <span class="rating-label">5.0 • Community rating</span>
+            </div>
+            <div class="post-actions">
+              <button class="btn-pill" type="button">Comment</button>
+              <button class="btn-pill" type="button">Share</button>
+              <button class="btn-pill" type="button">Save</button>
+            </div>
+            <div class="comments" aria-label="Comments">
+              <div class="comment">
+                <div class="avatar avatar-small">SC</div>
+                <div>
+                  <p class="comment-author">Scout Central</p>
+                  <p class="comment-body">Route discipline, separation, and hands. This is what we look for on Saturdays.</p>
+                </div>
+              </div>
+            </div>
+            <form class="comment-form" aria-label="Add a comment">
+              <label class="visually-hidden" for="comment-input-sample">Add a comment</label>
+              <input id="comment-input-sample" type="text" placeholder="Drop your take..." />
+              <button class="btn btn-ghost" type="submit">Post</button>
+            </form>
+          </article>
+
+           <div id="feed-list" data-view="general"></div>
+        </section>
+      </section>
+
+       <!-- SECTION: Friends Sidebar (Your All American Network) -->
+       <aside class="sidebar friends-card shadow-soft" aria-label="Friends list" data-sidebar="friends">
+        <div class="friends-header">
+            <h2 class="section-title" id="friends-title">Your All American Network</h2>
+            <p class="friends-subtitle" id="friends-subtitle">Your circle across sports, video, dating, business, and life.</p>
+        </div>
+        <ul id="friends-list" class="friends-list">
+          <li class="friend">
+            <button class="friend-row" type="button">
+              <div class="avatar">QB</div>
+              <div class="friend-meta">
+                <p class="friend-name">Miles Carter</p>
+                <p class="friend-role">QB • Pocket passer</p>
+              </div>
+              <span class="friend-status online">Online</span>
+            </button>
+          </li>
+          <li class="friend">
+            <button class="friend-row" type="button">
+              <div class="avatar">RB</div>
+              <div class="friend-meta">
+                <p class="friend-name">Tariq Jones</p>
+                <p class="friend-role">RB • All-purpose</p>
+              </div>
+              <span class="friend-status">Grinding</span>
+            </button>
+          </li>
+          <li class="friend">
+            <button class="friend-row" type="button">
+              <div class="avatar">DB</div>
+              <div class="friend-meta">
+                <p class="friend-name">Alex Rivera</p>
+                <p class="friend-role">DB • Lockdown corner</p>
+              </div>
+              <span class="friend-status">Film study</span>
+            </button>
+          </li>
+        </ul>
+
+        <form id="add-friend-form" class="add-friend-form" aria-label="Add a new friend">
+          <h3 class="add-friend-title">Add to your circle</h3>
+          <label class="field">
+            <span class="field-label">Name</span>
+            <input id="friend-name" type="text" placeholder="Teammate or coach" required />
+          </label>
+          <label class="field">
+            <span class="field-label">Role</span>
+            <input id="friend-role" type="text" placeholder="Position or title" />
+          </label>
+          <button class="btn btn-primary" type="submit">Add friend</button>
+        </form>
+      </aside>
+    </main>
+  </div>
+
+ 
+
+  <div class="profile-shell" data-view="profile" style="display:none;">
+    <section class="auth-hero">
+      <div class="auth-card shadow-soft">
+        <h2 class="auth-title">Create your All American profile</h2>
+        <p class="auth-tagline">Tell us who you are so we can build your All American story.</p>
+        <form id="profile-form" class="auth-form">
+          <label class="field">
+            <span class="field-label">Full name</span>
+            <input id="profile-name" type="text" placeholder="Jordan Walker" required />
+          </label>
+           <label class="field">
+             <span class="field-label">Handle</span>
+             <input id="profile-handle" type="text" placeholder="@allamerican" required />
+           </label>
+           <div class="profile-form-row">
+             <label class="field">
+               <span class="field-label">City</span>
+               <input id="profile-city" type="text" placeholder="Dallas" />
+             </label>
+             <label class="field">
+               <span class="field-label">State</span>
+               <input id="profile-state" type="text" placeholder="TX" />
+             </label>
+             <label class="field">
+               <span class="field-label">ZIP code</span>
+               <input id="profile-zip" type="text" placeholder="75001" />
+             </label>
+           </div>
+
+          <label class="field">
+            <span class="field-label">All American lane</span>
+            <select id="profile-role" required>
+              <option value="">Choose your focus</option>
+              <option value="sports">Sports • Athlete or coach</option>
+              <option value="video">Video maker • Creator</option>
+              <option value="dating">Dating • Building real connection</option>
+              <option value="truth">Truth • Reporter, citizen, or leader</option>
+              <option value="business">Business • Builder or owner</option>
+            </select>
+          </label>
+           <label class="field">
+             <span class="field-label">Why you are All American</span>
+             <textarea id="profile-bio" rows="3" placeholder="I stand for truth, work hard, and bring my best in everything I do." required></textarea>
+           </label>
+           <label class="field">
+             <span class="field-label">Achievements</span>
+             <textarea id="profile-achievements" rows="3" placeholder="State champion, honor roll, community volunteer..."></textarea>
+           </label>
+
+          <button class="btn btn-primary" type="submit">Save profile & enter</button>
+        </form>
+      </div>
+    </section>
+  </div>
+
+  <script src="script.js"></script>
+ </body>
+</html>

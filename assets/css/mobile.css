@@ -1,0 +1,723 @@
+/* Responsive layout for the main All American Network application. */
+
+html,
+body {
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+img,
+video {
+    max-width: 100%;
+}
+
+.center-feed,
+.sidebar-left,
+.sidebar-right,
+.profile-shell {
+    min-width: 0;
+}
+
+button,
+input,
+textarea,
+select {
+    max-width: 100%;
+}
+
+@media (max-width: 1100px) {
+    .topbar {
+        grid-template-columns: minmax(140px, 1fr) minmax(0, 3fr) minmax(140px, 1fr);
+        gap: 12px;
+        padding: 14px 18px;
+    }
+
+    .mini-logo,
+    .main-logo {
+        width: clamp(105px, 15vw, 140px);
+    }
+
+    .layout {
+        grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
+        gap: 16px;
+        padding: 16px;
+    }
+
+    .center-feed,
+    .profile-shell {
+        grid-column: 1 / -1;
+        grid-row: 1;
+    }
+
+    .sidebar-left {
+        grid-column: 1;
+        grid-row: 2;
+    }
+
+    .sidebar-right {
+        grid-column: 2;
+        grid-row: 2;
+    }
+
+    .sports-tabs {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        overscroll-behavior-inline: contain;
+        scrollbar-width: thin;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .sports-tabs .tab {
+        flex: 0 0 auto;
+    }
+}
+
+@media (max-width: 760px) {
+    body.mobile-drawer-open {
+        overflow: hidden;
+    }
+
+    .topbar {
+        display: flex;
+        min-height: 62px;
+        align-items: center;
+        gap: 9px;
+        padding: 8px max(10px, env(safe-area-inset-right)) 8px max(10px, env(safe-area-inset-left));
+        text-align: left;
+    }
+
+    .topbar-left,
+    .topbar-slogan-row,
+    .topbar-actions {
+        display: none;
+    }
+
+    .topbar-right {
+        order: -1;
+        flex: 0 0 auto;
+        justify-content: flex-start;
+    }
+
+    .main-logo {
+        width: 88px;
+    }
+
+    .topbar-center {
+        min-width: 0;
+        width: auto;
+        flex: 1;
+    }
+
+    .topbar-pill-buttons {
+        display: flex;
+        width: 100%;
+        justify-content: flex-start;
+        gap: 6px;
+        overflow-x: auto;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .topbar-pill-buttons::-webkit-scrollbar {
+        display: none;
+    }
+
+    .pill-btn {
+        flex: 0 0 auto;
+        min-height: 36px;
+        padding: 7px 10px;
+        font-size: 11px;
+        white-space: nowrap;
+    }
+
+    .layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 10px;
+        padding: 8px;
+    }
+
+    .mobile-layout-controls {
+        position: sticky;
+        z-index: 20;
+        top: 0;
+        grid-column: 1;
+        grid-row: 1;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+        align-items: center;
+        gap: 7px;
+        padding: 7px;
+        border: 1px solid #26345f;
+        border-radius: 12px;
+        background: rgba(10, 16, 38, .96);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, .25);
+        backdrop-filter: blur(12px);
+    }
+
+    .mobile-layout-controls > strong {
+        font-size: 12px;
+        white-space: nowrap;
+    }
+
+    .mobile-panel-button {
+        min-height: 40px;
+        padding: 8px 10px;
+        border: 1px solid #31416f;
+        border-radius: 9px;
+        background: #151f42;
+        color: #fff;
+        font: inherit;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    .mobile-panel-button:first-child {
+        justify-self: start;
+    }
+
+    .mobile-panel-button:last-child {
+        justify-self: end;
+    }
+
+    .mobile-panel-button[aria-expanded="true"] {
+        border-color: #ff6a2a;
+        background: #21315d;
+    }
+
+    .mobile-profile-summary {
+        grid-column: 1;
+        grid-row: 2;
+        display: block;
+        border: 1px solid #26345f;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #111a38, #0d132b);
+        overflow: hidden;
+    }
+
+    .mobile-profile-summary-button {
+        display: grid;
+        width: 100%;
+        grid-template-columns: 50px minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 10px;
+        padding: 9px 11px;
+        border: 0;
+        background: transparent;
+        color: #fff;
+        text-align: left;
+        cursor: pointer;
+    }
+
+    .mobile-profile-summary img {
+        width: 50px;
+        height: 50px;
+        border: 2px solid #ff6a2a;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+
+    .mobile-profile-copy {
+        display: flex;
+        min-width: 0;
+        flex-direction: column;
+        gap: 1px;
+    }
+
+    .mobile-profile-copy strong,
+    .mobile-profile-copy span,
+    .mobile-profile-copy small {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .mobile-profile-copy strong {
+        font-size: 15px;
+    }
+
+    .mobile-profile-copy span {
+        color: #74b9ff;
+        font-size: 12px;
+    }
+
+    .mobile-profile-copy small {
+        margin-top: 2px;
+        color: #b8c2df;
+        font-size: 10px;
+    }
+
+    .mobile-profile-chevron {
+        color: #ff8b57;
+        font-size: 30px;
+        line-height: 1;
+    }
+
+    .center-feed,
+    .profile-shell {
+        grid-column: 1;
+        grid-row: 3;
+    }
+
+    .center-feed {
+        display: flex;
+        min-width: 0;
+        flex-direction: column;
+    }
+
+    .story-strip-section { order: 1; }
+    .feed-toggle { order: 2; }
+    .sports-tabs { order: 3; }
+    .posts-panel,
+    .stories-panel,
+    .reels-panel { order: 4; }
+
+    .sidebar-left,
+    .sidebar-right {
+        position: fixed;
+        z-index: 102;
+        top: 0;
+        bottom: 0;
+        display: block;
+        width: min(88vw, 340px);
+        height: 100dvh;
+        max-height: none;
+        padding: max(12px, env(safe-area-inset-top)) 14px max(16px, env(safe-area-inset-bottom));
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        visibility: hidden;
+        box-shadow: 0 0 36px rgba(0, 0, 0, .55);
+        transition: transform .25s ease, visibility .25s;
+    }
+
+    .sidebar-left {
+        left: 0;
+        border-radius: 0 16px 16px 0;
+        transform: translateX(-105%);
+    }
+
+    .sidebar-right {
+        right: 0;
+        border-radius: 16px 0 0 16px;
+        transform: translateX(105%);
+    }
+
+    .sidebar-left.is-mobile-open,
+    .sidebar-right.is-mobile-open {
+        visibility: visible;
+        transform: translateX(0);
+    }
+
+    .mobile-drawer-heading {
+        position: sticky;
+        z-index: 2;
+        top: -12px;
+        display: flex;
+        min-height: 48px;
+        align-items: center;
+        justify-content: space-between;
+        margin: -12px -4px 12px;
+        padding: 10px 4px;
+        background: #0f152e;
+    }
+
+    .mobile-drawer-close {
+        display: grid;
+        width: 40px;
+        height: 40px;
+        place-items: center;
+        border: 1px solid #34436e;
+        border-radius: 50%;
+        background: #172143;
+        color: #fff;
+        font-size: 27px;
+        line-height: 1;
+        cursor: pointer;
+    }
+
+    .mobile-drawer-backdrop {
+        position: fixed;
+        z-index: 101;
+        inset: 0;
+        display: block;
+        width: 100%;
+        height: 100%;
+        padding: 0;
+        border: 0;
+        background: rgba(1, 4, 13, .68);
+        backdrop-filter: blur(2px);
+    }
+
+    .mobile-drawer-backdrop[hidden] {
+        display: none;
+    }
+
+    .sidebar-left .profile-photo-wrapper {
+        width: 132px;
+        height: 132px;
+        border-width: 5px;
+    }
+
+    .sidebar-left .profile-photo-inner {
+        width: 118px;
+        height: 118px;
+        border-width: 3px;
+    }
+
+    .feed-toggle {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 6px;
+    }
+
+    .feed-toggle .toggle-btn {
+        min-height: 42px;
+        padding: 9px 10px;
+    }
+
+    .sports-tabs {
+        padding: 8px;
+    }
+
+    .stories-panel,
+    .story-strip-section,
+    .reels-panel,
+    .post-card,
+    .profile-edit-card {
+        border-radius: 10px;
+        padding: 12px;
+    }
+
+    .story-strip-heading {
+        align-items: center;
+        gap: 8px;
+    }
+
+    .story-strip-heading h2 {
+        font-size: 15px;
+    }
+
+    .story-refresh {
+        min-height: 38px;
+        padding: 7px 11px;
+        font-size: 11px;
+    }
+
+    .story-rail {
+        gap: 8px;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .story-rail-card {
+        height: 136px;
+        flex-basis: calc((100% - 16px) / 3);
+        padding: 8px;
+    }
+
+    .story-rail-card .story-avatar {
+        top: 7px;
+        left: 7px;
+        width: 31px;
+        height: 31px;
+        flex-basis: 31px;
+        border-width: 2px;
+    }
+
+    .story-create-plus {
+        width: 36px;
+        height: 36px;
+        font-size: 24px;
+    }
+
+    .story-arrow {
+        width: 32px;
+        height: 32px;
+        font-size: 25px;
+    }
+
+    .story-feed,
+    .reels-feed {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .story-composer-heading {
+        align-items: flex-start;
+    }
+
+    .story-composer-row,
+    .story-actions,
+    .story-comment-form,
+    .daily-comment-form {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .story-file-button,
+    .story-submit,
+    .story-comment-form button,
+    .daily-comment-form button {
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .story-composer-row input,
+    .story-comment-form input,
+    .daily-post-heading textarea,
+    .daily-post-tools select,
+    .daily-comment-form input,
+    .profile-edit-card input,
+    .profile-edit-card textarea {
+        min-height: 44px;
+        font-size: 16px;
+    }
+
+    .story-submit {
+        width: 100%;
+    }
+
+    .story-media-wrap {
+        min-height: 180px;
+    }
+
+    .story-media {
+        max-height: min(55vh, 340px);
+    }
+
+    .daily-post-tools,
+    .post-header,
+    .post-actions {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .daily-post-submit {
+        margin-left: 0;
+    }
+
+    .post-btn {
+        min-height: 42px;
+        flex: 1 1 calc(50% - 8px);
+    }
+
+    .profile-row {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 0;
+    }
+
+    .profile-edit-card {
+        width: 100%;
+        max-width: none;
+        margin: 0;
+    }
+
+    .sidebar-logout-container {
+        padding: 16px 0 0;
+        margin-top: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .topbar {
+        min-height: 56px;
+        padding-block: 6px;
+    }
+
+    .main-logo {
+        width: 76px;
+    }
+
+    .pill-btn {
+        min-height: 34px;
+        padding: 6px 8px;
+        font-size: 10px;
+    }
+
+    .layout {
+        gap: 8px;
+        padding: 6px;
+    }
+
+    .mobile-layout-controls {
+        border-radius: 10px;
+        padding: 5px;
+    }
+
+    .mobile-layout-controls > strong {
+        display: none;
+    }
+
+    .mobile-layout-controls {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .mobile-panel-button {
+        width: 100%;
+        min-height: 38px;
+    }
+
+    .mobile-profile-summary-button {
+        grid-template-columns: 44px minmax(0, 1fr) auto;
+        padding: 8px 10px;
+    }
+
+    .mobile-profile-summary img {
+        width: 44px;
+        height: 44px;
+    }
+
+    .mobile-profile-copy strong {
+        font-size: 14px;
+    }
+
+    .story-strip-heading p {
+        display: none;
+    }
+
+    .story-rail {
+        gap: 6px;
+    }
+
+    .story-rail-card {
+        height: 122px;
+        flex-basis: calc((100% - 12px) / 3);
+        border-radius: 10px;
+        padding: 7px;
+    }
+
+    .story-rail-card strong {
+        font-size: 10px;
+    }
+
+    .story-rail-card small {
+        font-size: 9px;
+    }
+
+    .story-arrow {
+        width: 29px;
+        height: 29px;
+    }
+
+    .stories-panel,
+    .story-strip-section,
+    .reels-panel,
+    .post-card,
+    .profile-edit-card,
+    .daily-post-composer,
+    .story-composer {
+        padding: 10px;
+    }
+
+    .sports-tabs {
+        margin-inline: -1px;
+        border-radius: 9px;
+        padding: 7px;
+    }
+
+    .tab {
+        min-height: 40px;
+        padding: 7px 12px;
+    }
+
+    .story-file-button {
+        width: 100%;
+    }
+
+    .story-composer-heading {
+        flex-direction: column;
+    }
+
+    .story-board-header h2,
+    .story-composer-heading h2 {
+        font-size: 16px;
+    }
+
+    .daily-post-heading {
+        align-items: flex-start;
+    }
+
+    .daily-post-heading .avatar-current {
+        width: 34px;
+        height: 34px;
+    }
+
+    .daily-post-tools > * {
+        flex: 1 1 calc(50% - 8px);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .daily-post-tools select,
+    .daily-post-submit {
+        width: 100%;
+    }
+
+    .daily-post-submit {
+        flex-basis: 100%;
+    }
+
+    .daily-post-media img,
+    .daily-post-media video {
+        height: 180px;
+    }
+
+    .daily-post-media-1 img,
+    .daily-post-media-1 video {
+        height: auto;
+        max-height: 300px;
+    }
+
+    .post-media {
+        max-height: 300px;
+    }
+
+    .community-rating-widget {
+        gap: 5px;
+        padding: 9px 10px;
+    }
+
+    .community-rating-stars button {
+        width: 32px;
+        height: 38px;
+    }
+
+    .profile-stats {
+        gap: 6px;
+    }
+
+    .stat-card {
+        padding: 9px 5px;
+    }
+
+    .stat-value {
+        font-size: 17px;
+    }
+
+    .stat-label {
+        font-size: 10px;
+    }
+
+    .profile-form-actions {
+        flex-direction: column;
+    }
+
+    .save-profile-btn,
+    .cancel-profile-btn {
+        width: 100%;
+        min-height: 44px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        transition-duration: .01ms !important;
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+    }
+}

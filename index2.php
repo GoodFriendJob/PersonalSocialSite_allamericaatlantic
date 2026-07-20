@@ -1,0 +1,182 @@
+<?php
+
+
+  // The global $_POST variable allows you to access the data sent with the POST method by name
+  // To access the data sent with the GET method, you can use $_GET
+  $name = htmlspecialchars($_POST['name']);
+  $email  = htmlspecialchars($_POST['email']);
+
+  echo  $name, ' ', $email;
+?>
+
+<html>
+<head>
+
+<title>All America Atlantic</title>
+
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<style type="text/css">
+<!--
+.style18 {
+font-size: 24px;
+
+
+}
+input[type="text"]
+ {
+   font-size:24px;
+ }
+input {
+
+background-color:#009900;
+
+}
+input .button{
+font-size:24px;}
+-->
+.block {
+  display: block;
+   border-radius: 25px;
+   border: 2px solid #73AD21;
+  width: 100%;
+  border: none;
+  background-color: #009900;
+  color: white;
+  
+  font-size: 26px;
+  cursor: pointer;
+  text-align: center;
+}
+
+.block:hover {
+  background-color: #ddd;
+  color: red;
+   border: 2px solid #b22505;
+}
+</style>
+>
+<style type="text/css">
+<!--
+.signup {
+	background-color:#FF6600;
+	 float: right;
+    color: #FFFF00;
+    text-align: left;
+    padding: 140px 160px;
+    text-decoration: none;
+    font-size: 57px;
+	overflow: hidden;
+}
+/* Add a black background color to the top navigation */
+.topnav {
+   
+    overflow: hidden;
+}
+
+/* Style the links inside the navigation bar */
+.topnav a {
+    float: left;
+    color: #FFFF00;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+    font-size: 17px;
+}
+
+/* Change the color of links on hover */
+.topnav a:hover {
+    background-color: #ddd;
+    color: black;
+}
+
+/* Add a color to the active/current link */
+.topnav a.active {
+   
+    color: #ffffff;
+}
+.style1 {
+	font-size: 100px;
+	font-weight: bold;
+	color: #CC0033;
+}
+.style2 {font-size: medium}
+body {
+	background-color: #000000;
+	
+}
+.style3 {color: #ffffff}
+a:visited {
+	color: #FFCC00;
+}
+a:active {
+	color: #FFFF00;
+}
+.style4 {color: #CC0000}
+.style5 {color: #FF0000}
+.style6 {color: #0000CC}
+a:link {
+	color: #FF0000;
+}
+.style17 {
+	 border-radius: 25px;
+	  border: 2px solid #73AD21;
+	  padding: 20px; 
+     background-color:#FF6600; 
+	 float: right; 
+	 color: #330099; 
+	 text-align: left; 
+	 
+	 text-decoration: none; 
+	 font-size: 40px; 
+	 overflow: hidden; 
+	 }
+-->
+</style>
+</head>
+
+<body >
+<table align="center">
+     <tr>
+	    <td align="center"><div class="topnav" >
+  <a class="active" href="index.html">Home</a>
+  <a href="news.html">News</a>
+  <a href="contact.html">Contact</a>
+  <a href="about.php">About</a>
+   <a href="myBooks.htm">Books</a>
+    <a href="gifts.html">Gifts</a>
+	 <a href="downloads.html">DownLoads</a>
+	 <a href="navpage.htm">navPage</a>
+</div></td>
+	</tr>
+</table>
+
+<div align="center" class="style1" id="title">
+  <div align="center"><span class="style5"> All</span> <span class="style3">America</span> <span class="style6">Atlantic</span> </div>
+</div>
+<div align="center" class="style2 style4" ></div>
+
+</p>
+Welcome <?php echo $_POST["name"]; ?><br>
+Your email address is: <?php echo $_POST["email"]; ?>
+
+
+<form method="post" action="#">
+<div class="style17">Sign Up <div><span class="style18">Name:</span>  
+      <input name="name" type="text" size="30" maxlength="40"></div>
+  <div><span class="style18">Email:</span>
+    <input name="email" type="text" size="30" maxlength="40"></div><p></p>
+		<div><input class="block" name="Submit" type="submit" value="Submit">
+  </div></div>
+</form>
+<p></p>
+
+<p></p>
+
+<p></p>
+<p></p>
+
+<p></p>
+
+
+</body>
+</html>

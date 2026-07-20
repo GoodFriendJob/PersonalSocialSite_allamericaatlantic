@@ -1,19 +1,28 @@
 <?php
-require_once __DIR__ . '/app/core/Session.php';
-require_once __DIR__ . '/app/core/Asset.php';
-// Read-only: this page never writes to the session, so it releases the lock
-// immediately rather than serializing concurrent requests.
-Session::startReadOnly();
+session_start();
 require __DIR__ . "/app/config/db.php";
+require_once __DIR__ . "/app/controllers/RatingController.php";
 
 $u = isset($_GET["u"]) ? trim((string) $_GET["u"]) : "";
 $u = ltrim($u, "@");
+$viewerId = isset($_SESSION["user_id"]) ? (int) $_SESSION["user_id"] : null;
+$ratingReady = RatingController::ensureTable();
+$__app_base = rtrim(str_replace("\\", "/", dirname($_SERVER["SCRIPT_NAME"] ?? "")), "/");
+if ($__app_base === "." || $__app_base === "/") $__app_base = "";
+$ratingSelect = $ratingReady
+    ? "(SELECT AVG(cr.rating) FROM community_ratings cr WHERE cr.target_type = 'profile' AND cr.target_id = u.id) AS community_rating,
+       (SELECT COUNT(*) FROM community_ratings crc WHERE crc.target_type = 'profile' AND crc.target_id = u.id) AS rating_count,
+       " . ($viewerId
+           ? "(SELECT crm.rating FROM community_ratings crm WHERE crm.target_type = 'profile' AND crm.target_id = u.id AND crm.user_id = {$viewerId})"
+           : "NULL") . " AS my_rating"
+    : "(SELECT AVG(NULLIF(p.rating, 0)) FROM posts p WHERE p.user_id = u.id) AS community_rating,
+       0 AS rating_count, NULL AS my_rating";
 
 if ($u === "") {
     http_response_code(400);
     ?>
     <!DOCTYPE html>
-    <html lang="en"><head><meta charset="UTF-8"><title>Profile</title><link rel="stylesheet" href="<?= asset('assets/css/app.css') ?>"></head>
+    <html lang="en"><head><meta charset="UTF-8"><title>Profile</title><link rel="stylesheet" href="app.css"></head>
     <body style="padding:24px;font-family:system-ui;background:#050814;color:#fff;">
     <p>Missing username. Open a profile with <code>?u=username</code>.</p>
     <p><a href="app.php" style="color:#5eb4ff">Return to app</a></p>
@@ -34,7 +43,7 @@ $stmt = $pdo->prepare("
            u.bio,
            u.goals,
            u.profile_pic,
-           (SELECT AVG(NULLIF(p.rating, 0)) FROM posts p WHERE p.user_id = u.id) AS community_rating,
+           {$ratingSelect},
            (SELECT COUNT(*) FROM highlights h WHERE h.user_id = u.id) AS num_highlights,
            (SELECT COUNT(*) FROM saved_posts s WHERE s.user_id = u.id) AS num_saved_posts
     FROM users u
@@ -47,7 +56,7 @@ if (!$profile) {
     http_response_code(404);
     ?>
     <!DOCTYPE html>
-    <html lang="en"><head><meta charset="UTF-8"><title>Not found</title><link rel="stylesheet" href="<?= asset('assets/css/app.css') ?>"></head>
+    <html lang="en"><head><meta charset="UTF-8"><title>Not found</title><link rel="stylesheet" href="app.css"></head>
     <body style="padding:24px;font-family:system-ui;background:#050814;color:#fff;">
     <p>No user found for <strong><?= htmlspecialchars('@' . $u, ENT_QUOTES, 'UTF-8') ?></strong>.</p>
     <p><a href="app.php" style="color:#5eb4ff">Return to app</a></p>
@@ -56,7 +65,6 @@ if (!$profile) {
     exit;
 }
 
-$viewerId = isset($_SESSION["user_id"]) ? (int) $_SESSION["user_id"] : null;
 $isOwn = $viewerId !== null && $viewerId === (int) $profile["id"];
 
 $name = trim(($profile["first_name"] ?? "") . " " . ($profile["last_name"] ?? ""));
@@ -80,10 +88,12 @@ if (!empty($profile["city"]) || !empty($profile["state"])) {
     $hometown = "Not set yet";
 }
 
-// Neutral silhouette rather than charles.jpg, which is a real member's photo:
-// every user without an avatar used to render as that person.
-$pfp = $profile["profile_pic"] ? $h($profile["profile_pic"]) : asset('assets/img/avatar-placeholder.svg');
+$pfp = trim((string)($profile["profile_pic"] ?? "")) !== ""
+    ? $h($profile["profile_pic"])
+    : "assets/img/default-avatar.svg";
 $ratingVal = $profile["community_rating"] !== null ? number_format((float) $profile["community_rating"], 1) : "0.0";
+$ratingCount = (int)($profile["rating_count"] ?? 0);
+$myRating = $profile["my_rating"] !== null ? (int)$profile["my_rating"] : null;
 $hl = (int) ($profile["num_highlights"] ?? 0);
 $sv = (int) ($profile["num_saved_posts"] ?? 0);
 
@@ -92,15 +102,17 @@ $sv = (int) ($profile["num_saved_posts"] ?? 0);
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title><?= $h($name) ?> — Profile</title>
-    <link rel="stylesheet" href="<?= asset('assets/css/app.css') ?>">
+    <link rel="stylesheet" href="app.css">
+    <link rel="stylesheet" href="assets/css/mobile.css">
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
 
 <header class="topbar">
     <div class="topbar-left">
-        <a href="app.php"><img src="<?= asset('assets/icons/logo_dark.png') ?>" alt="AAA" class="mini-logo"></a>
+        <a href="app.php"><img src="assets/icons/aaa_logo_dark.png" alt="AAA" class="mini-logo"></a>
     </div>
     <div class="topbar-center">
         <div class="topbar-slogan-row">
@@ -145,12 +157,28 @@ $sv = (int) ($profile["num_saved_posts"] ?? 0);
             </div>
 
             <p class="profile-description"><?= $profile["bio"] !== null && $profile["bio"] !== "" ? nl2br($h($profile["bio"])) : $h("No bio yet.") ?></p>
+
+            <div class="profile-rating-block">
+                <h3>Rate this athlete's profile and bio</h3>
+                <div data-rating-target="profile"
+                     data-rating-id="<?= (int)$profile['id'] ?>"
+                     data-rating-average="<?= $h($ratingVal) ?>"
+                     data-rating-count="<?= $ratingCount ?>"
+                     data-my-rating="<?= $myRating !== null ? $myRating : '' ?>"
+                     data-rating-enabled="<?= $viewerId !== null ? '1' : '0' ?>"></div>
+            </div>
             <?php if (!empty($profile["goals"])): ?>
                 <p class="profile-goals"><strong>Goals:</strong> <?= nl2br($h($profile["goals"])) ?></p>
             <?php endif; ?>
         </div>
     </aside>
 </div>
+
+<script>
+window.__APP_BASE__ = <?= json_encode($__app_base, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+window.__CURRENT_USER_ID__ = <?= $viewerId !== null ? $viewerId : 'null' ?>;
+</script>
+<script src="assets/js/ratings.js"></script>
 
 </body>
 </html>

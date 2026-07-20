@@ -63,20 +63,24 @@ class AuthController {
         // Generate verification token
         $token = bin2hex(random_bytes(32));
 
+        // Keep one neutral default in both legacy avatar columns so every UI
+        // displays a new member consistently before they upload a photo.
+        $defaultAvatar = 'assets/img/default-avatar.svg';
+
         // Insert user
         $stmt = $pdo->prepare("
-            INSERT INTO users (first_name, last_name, username, email, password, city, state, verification_token, email_verified, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, NOW())
+            INSERT INTO users (first_name, last_name, username, email, password, city, state, profile_pic, verification_token, email_verified, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, NOW())
         ");
-        $stmt->execute([ $first_name, $last_name, $username, $email, $hash, $city, $state, $token ]);
+        $stmt->execute([ $first_name, $last_name, $username, $email, $hash, $city, $state, $defaultAvatar, $token ]);
         $userId = (int)$pdo->lastInsertId();
 
-        // Create empty profile
+        // Create the matching legacy profile row.
         $stmt = $pdo->prepare("
             INSERT INTO profiles (user_id, bio, avatar_url, created_at)
-            VALUES (?, '', '', NOW())
+            VALUES (?, '', ?, NOW())
         ");
-        $stmt->execute([$userId]);
+        $stmt->execute([$userId, $defaultAvatar]);
 
         /* ------------------------------------------------------------------
          * PHPMailer Configuration Setup (Inside Function)
@@ -86,14 +90,14 @@ class AuthController {
             // 1. Core Server Settings
             $mail->SMTPDebug  = 0;                                      // Must stay 0 to prevent JSON/CORB errors
             $mail->isSMTP();                                            
-            $mail->Host       = config('mail.host');
-            $mail->SMTPAuth   = true;
-            $mail->Username   = config('mail.username');
-            $mail->Password   = config('mail.password');
-
+            $mail->Host       = 'netsol-smtp-oxcs.hostingplatform.com'; 
+            $mail->SMTPAuth   = true;                                   
+            $mail->Username   = 'admin@allamericaatlantic.com';         
+            $mail->Password   = 'DianaCharles8626$';            // Replace with your actual password
+            
             // 2. Port & Encryption Matrix (Try Port 587 first)
-            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-            $mail->Port       = config('mail.port', 587);
+            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;         
+            $mail->Port       = 587;                                    
 
             // 3. Shared Server Timeout Configuration
             $mail->Timeout    = 25;                                     
@@ -106,7 +110,7 @@ class AuthController {
             );
 
             // 4. Header Mapping
-            $mail->setFrom(config('mail.from_addr'), config('mail.from_name'));
+            $mail->setFrom('admin@allamericaatlantic.com', 'All America Atlantic');
             $mail->addAddress($email);                                  
 
             // 5. Message Content & Verification Link
@@ -114,31 +118,26 @@ class AuthController {
             $mail->Subject = 'Verify Your Account';
             
             // Fixed Link: Points correctly to your verify.php handler script
-            $verificationLink = rtrim(config('app.url'), '/') . '/verify.php?token=' . urlencode($token);
+           $verificationLink = "https://allamericaatlantic.com/verify.php?token=" . $token;
 
             
             $mail->Body = "<h1>Welcome!</h1><p>Please click the link below to verify your account:</p><a href='{$verificationLink}'>Verify Email</a>";
             $mail->send();
 
         } catch (Exception $e) {
-            // The account exists at this point, so a mail failure must not be
-            // reported as a failed registration — that used to leave people
-            // with a working account and a 500 telling them it broke.
+            // Log details silently if SMTP crashes
             error_log("PHPMailer System Error: " . $mail->ErrorInfo);
-
+            // The database inserts already succeeded, so do not tell the user
+            // registration failed and cause a duplicate-account retry.
             Response::success([
-                "id"           => $userId,
-                "mail_sent"    => false,
-                "message"      => "Account created, but the verification email could not be sent. Contact support to activate your account.",
-            ]);
+                "id" => $userId,
+                "warning" => "Account created, but the verification email could not be sent."
+            ], 201);
             return;
         }
 
-        Response::success([
-            "id"        => $userId,
-            "mail_sent" => true,
-            "message"   => "Account created. Check your email for the verification link.",
-        ]);
+        // 6. SUCCESS RESPONSE (Fires ONLY after email sends or error handles)
+        Response::success(["id" => $userId], 201);
     }
 
     /* ------------------------- LOGIN USER -------------------------- */
@@ -150,23 +149,20 @@ class AuthController {
             $input = $_POST;
         }
 
-        $identifier = trim($input['email'] ?? '');
-        $password   = (string)($input['password'] ?? '');
+        $email    = trim($input['email'] ?? '');
+        $password = trim($input['password'] ?? '');
 
-        if ($identifier === '' || $password === '') {
+        if ($email === '' || $password === '') {
             Response::error("Email and password are required", 400);
             return;
         }
 
-        // The login form accepts either an email or a username.
-        $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ? OR username = ? LIMIT 1");
-        $stmt->execute([$identifier, $identifier]);
+        $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");
+        $stmt->execute([$email]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        // Same message for "no such account" and "wrong password" so the
-        // response can't be used to enumerate which emails are registered.
         if (!$user || !password_verify($password, $user['password'])) {
-            Response::error("Incorrect email or password", 401);
+            Response::error("Invalid credentials", 400);
             return;
         }
 
@@ -175,58 +171,9 @@ class AuthController {
             return;
         }
 
-        if (config('app.require_email_verification', true) && empty($user['email_verified'])) {
-            Response::json([
-                'error'      => 'Please verify your email before logging in.',
-                'unverified' => true,
-            ], 403);
-            return;
-        }
-
-        Session::login((int)$user['id']);
-
-        Response::success(["user" => self::publicUser($user)]);
-    }
-
-    /* ------------------------- LOGOUT -------------------------- */
-    public static function logout($params) {
-        Session::logout();
-        Response::success(["message" => "Logged out"]);
-    }
-
-    /* ------------------------- CURRENT USER -------------------------- */
-    public static function me($params) {
-        global $pdo;
-
-        $auth = AuthMiddleware::user();
-        if ($auth === null) {
-            Response::error("Not authenticated", 401);
-            return;
-        }
-
-        $stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
-        $stmt->execute([$auth['id']]);
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
-
         Response::success([
-            "user" => self::publicUser($user) + ['role' => $auth['role']],
+            "success" => true,
+            "id" => $user['id']
         ]);
-    }
-
-    /** Strips password hashes and verification tokens before sending a user out. */
-    private static function publicUser(array $user): array {
-        return [
-            'id'          => (int)$user['id'],
-            'username'    => $user['username'],
-            'first_name'  => $user['first_name'],
-            'last_name'   => $user['last_name'],
-            'email'       => $user['email'],
-            'city'        => $user['city'],
-            'state'       => $user['state'],
-            'bio'         => $user['bio'],
-            'profile_pic' => $user['profile_pic'],
-            'sport'       => $user['sport'],
-            'position'    => $user['position'],
-        ];
     }
 }

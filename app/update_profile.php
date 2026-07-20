@@ -1,7 +1,6 @@
 <?php
 require __DIR__ . "/config/db.php";
-require_once __DIR__ . '/core/Session.php';
-Session::start();
+session_start();
 
 header("Content-Type: application/json");
 
@@ -134,6 +133,13 @@ try {
         exit;
     }
     throw $e;
+}
+
+if ($ok) {
+    // Keep the legacy profiles row synchronized with the users record used by
+    // posts, stories, and the main profile page.
+    $legacy = $pdo->prepare("UPDATE profiles SET bio = ?, avatar_url = ?, updated_at = NOW() WHERE user_id = ?");
+    $legacy->execute([$bio, $newProfilePic, $user_id]);
 }
 
 if ($ok && $removeCurrentPic && strpos($currentProfilePic, "uploads/profile_pics/") === 0) {

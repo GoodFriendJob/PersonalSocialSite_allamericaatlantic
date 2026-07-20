@@ -1,22 +1,18 @@
-connect.php
-.claude/settings.json
+# FTP configuration
+.vscode/sftp.json
+*.ftpconfig
 
-# Secrets — never commit
-app/config/env.php
+# Credentials
+.env
+.env.*
+config/database.php
+APP/config/database.php
 
-# Debug / error logs
-debug.txt
-debug_log.txt
-mail_debug.txt
-app/php-error-log.txt
-app/routes/error.log
-app/routes/debug_log.txt
-app/routes/test_debug.txt
-app/test.txt
+# Runtime content
+logs/
+cache/
+tmp/
 
-# User uploads
-app/public/uploads/
+# User uploads should not be changed through Git
 uploads/
-
-# Local DB backups — never commit
-backups/
+APP/uploads/

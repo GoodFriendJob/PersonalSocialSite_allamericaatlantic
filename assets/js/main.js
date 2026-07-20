@@ -10,30 +10,6 @@ function appUrl(relPath) {
 
 let sidebarUserCache = null;
 
-/**
- * Neutral silhouette shown when a user has no picture, while the real one
- * loads, or when a stored path points at a file that is no longer there.
- *
- * This used to fall back to charles.jpg — a real member's photo — so every
- * user without an avatar appeared as that person.
- */
-const AVATAR_PLACEHOLDER = appUrl("assets/img/avatar-placeholder.svg");
-
-/**
- * Points an <img> at a user's avatar, falling back to the placeholder both
- * when the path is empty and when the file fails to load.
- */
-function setAvatar(img, storedPath) {
-  if (!img) return;
-  img.onerror = function () {
-    img.onerror = null; // placeholder must never re-trigger this
-    img.src = AVATAR_PLACEHOLDER;
-  };
-  img.src = storedPath
-    ? (window.Api ? Api.assetUrl(storedPath) : storedPath)
-    : AVATAR_PLACEHOLDER;
-}
-
 function escapeHtml(str) {
   return String(str)
     .replace(/&/g, "&amp;")
@@ -107,7 +83,7 @@ function populateProfileForm(u) {
   const picPreview = document.getElementById("profile-picture-preview");
   const picInput = document.getElementById("profile-picture");
   const removePic = document.getElementById("profile-remove-picture");
-  setAvatar(picPreview, u.profile_pic);
+  if (picPreview) picPreview.src = u.profile_pic || "assets/img/default-avatar.svg";
   if (picInput) picInput.value = "";
   if (removePic) removePic.checked = false;
 }
@@ -122,15 +98,18 @@ if (profilePictureInput && profilePicturePreview) {
   profilePictureInput.addEventListener("change", (event) => {
     const file = event.target.files && event.target.files[0];
     if (!file) {
-      setAvatar(profilePicturePreview, sidebarUserCache?.profile_pic);
+      if (sidebarUserCache?.profile_pic) {
+        profilePicturePreview.src = sidebarUserCache.profile_pic;
+      } else {
+        profilePicturePreview.src = "assets/img/default-avatar.svg";
+      }
       return;
     }
     if (profileRemovePicture) profileRemovePicture.checked = false;
     if (!file.type.startsWith("image/")) return;
     const reader = new FileReader();
     reader.onload = (e) => {
-      // A FileReader data: URI is the chosen file itself, not a stored path.
-      profilePicturePreview.src = e.target?.result || AVATAR_PLACEHOLDER;
+      profilePicturePreview.src = e.target?.result || "assets/img/default-avatar.svg";
     };
     reader.readAsDataURL(file);
   });
@@ -139,10 +118,10 @@ if (profilePictureInput && profilePicturePreview) {
 if (profileRemovePicture && profilePicturePreview) {
   profileRemovePicture.addEventListener("change", () => {
     if (profileRemovePicture.checked) {
-      profilePicturePreview.src = AVATAR_PLACEHOLDER;
+      profilePicturePreview.src = "assets/img/default-avatar.svg";
       if (profilePictureInput) profilePictureInput.value = "";
     } else if (sidebarUserCache?.profile_pic) {
-      setAvatar(profilePicturePreview, sidebarUserCache.profile_pic);
+      profilePicturePreview.src = sidebarUserCache.profile_pic;
     }
   });
 }
@@ -188,8 +167,7 @@ if (profileForm) {
         }
         return;
       }
-      // The profile just changed, so the cached bootstrap payload is stale.
-      await loadSidebarProfile({ force: true });
+      await loadSidebarProfile();
       setAppStage("main");
     } catch (err) {
       console.error(err);
@@ -343,25 +321,17 @@ document.addEventListener("DOMContentLoaded", async () => {
   hydrateMentions();
 });
 
-/**
- * Paints the sidebar profile.
- *
- * On first load the data comes from the shared bootstrap request — the same
- * promise feed.js and network-friends.js await — so this costs no extra round
- * trip. After saving the profile the cached payload is stale, so those call
- * sites pass {force: true} to re-fetch.
- *
- * @param {{force?: boolean}} [opts]
- */
-async function loadSidebarProfile(opts) {
+async function loadSidebarProfile() {
   try {
-    const data = await Api.bootstrap(opts && opts.force);
-    const u = data && data.user;
+    const res = await fetch(appUrl("app/me.php"));
+    const data = await res.json();
 
-    if (!u) {
-      console.warn("Sidebar profile: no user in response");
+    if (!data.success) {
+      console.warn("Sidebar profile:", data.message || "failed");
       return;
     }
+
+    const u = data.user;
     sidebarUserCache = u;
 
     const profilePic = document.getElementById("profilePic");
@@ -371,6 +341,10 @@ async function loadSidebarProfile(opts) {
     const profileLocation = document.getElementById("profileLocation");
     const profileBio = document.getElementById("profileBio");
     const profileGoals = document.getElementById("profileGoals");
+    const mobileProfilePic = document.getElementById("mobileProfilePic");
+    const mobileProfileName = document.getElementById("mobileProfileName");
+    const mobileProfileHandle = document.getElementById("mobileProfileHandle");
+    const mobileProfileSport = document.getElementById("mobileProfileSport");
     const badgeLikes = document.getElementById("badgeLikes");
     const statHighlights = document.getElementById("statHighlights");
     const statScouts = document.getElementById("statScouts");
@@ -378,8 +352,11 @@ async function loadSidebarProfile(opts) {
 
     const displayName = [u.first_name, u.last_name].filter(Boolean).join(" ").trim() || u.username || "Member";
 
-    setAvatar(profilePic, u.profile_pic);
+    if (profilePic) profilePic.src = u.profile_pic || "assets/img/default-avatar.svg";
     if (profileName) profileName.textContent = displayName;
+    if (mobileProfilePic) mobileProfilePic.src = u.profile_pic || "assets/img/default-avatar.svg";
+    if (mobileProfileName) mobileProfileName.textContent = displayName;
+    if (mobileProfileHandle) mobileProfileHandle.textContent = u.username ? `@${u.username}` : "@member";
 
     if (profileHandle && u.username) {
       profileHandle.textContent = "@" + u.username;
@@ -389,6 +366,8 @@ async function loadSidebarProfile(opts) {
     const sportTxt = u.sport && String(u.sport).trim() ? u.sport : "Sport not set";
     const posTxt = u.position && String(u.position).trim() ? u.position : "Position not set";
     if (profileSport) profileSport.textContent = `${sportTxt} — ${posTxt}`;
+
+    if (mobileProfileSport) mobileProfileSport.textContent = `${sportTxt} — ${posTxt}`;
 
     if (profileLocation) {
       profileLocation.textContent =
@@ -419,8 +398,4 @@ async function loadSidebarProfile(opts) {
     console.error("Sidebar load error:", err);
   }
 }
-
-// Friend list, search and requests live in assets/js/network-friends.js.
-// The previous implementation here called app/get_friends.php,
-// app/add_friend.php and app/routes/search_users.php — none of which exist —
-// and bound a second set of handlers to the same sidebar elements.
+// RIGHT SIDEBAR — LOAD FRIENDS LIST

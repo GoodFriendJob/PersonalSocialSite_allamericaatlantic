@@ -1,70 +1,60 @@
 <?php
 
-require_once __DIR__ . '/Session.php';
+require_once __DIR__ . '/JWT.php';
 
 class AuthMiddleware
 {
-    /**
-     * Resolves the logged-in user or returns null. Use for endpoints that
-     * behave differently for guests (e.g. public post listings).
-     *
-     * Returns ['id' => int, 'username' => string, 'role' => string].
-     */
-    public static function user(): ?array
+    public static function requireAuth()
     {
         global $pdo;
 
-        // Read-only: re-opening the session here would re-acquire the file
-        // lock the front controller just released and serialize every
-        // authenticated request again.
-        Session::startReadOnly();
-
-        $userId = Session::userId();
-        if ($userId === null) {
-            return null;
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start();
         }
 
-        $stmt = $pdo->prepare("
-            SELECT u.id, u.username, u.banned, COALESCE(ar.role, 'user') AS role
-            FROM users u
-            LEFT JOIN admin_roles ar ON ar.user_id = u.id
-            WHERE u.id = ?
-        ");
-        $stmt->execute([$userId]);
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+        $headers = function_exists('getallheaders') ? getallheaders() : [];
+        $auth =
+            ($headers['Authorization'] ?? null) ??
+            ($headers['authorization'] ?? null) ??
+            ($_SERVER['HTTP_AUTHORIZATION'] ?? null);
 
-        // Session points at a deleted user — clear it rather than 500.
-        if (!$user) {
-            Session::logout();
-            return null;
-        }
+        $identity = null;
 
-        return [
-            'id'       => (int)$user['id'],
-            'username' => $user['username'],
-            'role'     => $user['role'],
-            'banned'   => (int)$user['banned'],
-        ];
-    }
-
-    /**
-     * Same return shape as the old JWT version, so the existing call sites
-     * across the controllers keep working unchanged.
-     */
-    public static function requireAuth(): array
-    {
-        $user = self::user();
-
-        if ($user === null) {
+        if ($auth) {
+            if (stripos($auth, 'Bearer ') === 0) {
+                $auth = substr($auth, 7);
+            }
+            $decoded = JWT::decode($auth);
+            if (!$decoded || !is_array($decoded) || empty($decoded['id'])) {
+                Response::error('Invalid token', 401);
+                exit;
+            }
+            $identity = $decoded;
+        } elseif (!empty($_SESSION['user_id'])) {
+            $identity = ['id' => (int)$_SESSION['user_id']];
+        } else {
             Response::error('Authentication required', 401);
             exit;
         }
 
-        if (!empty($user['banned'])) {
+        $stmt = $pdo->prepare('SELECT * FROM users WHERE id = ?');
+        $stmt->execute([(int)$identity['id']]);
+        $dbUser = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$dbUser) {
+            Response::error('User not found', 404);
+            exit;
+        }
+        if (!empty($dbUser['banned'])) {
             Response::error('Account banned', 403);
             exit;
         }
 
-        return $user;
+        return [
+            'id' => (int)$dbUser['id'],
+            'username' => $dbUser['username'],
+            'role' => $dbUser['role'] ?? ($identity['role'] ?? 'user'),
+            'banned' => $dbUser['banned'] ?? 0,
+        ];
     }
 }

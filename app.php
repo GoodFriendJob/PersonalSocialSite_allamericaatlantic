@@ -1,12 +1,6 @@
 <?php
-require_once __DIR__ . '/app/core/Session.php';
-require_once __DIR__ . '/app/core/Asset.php';
-
-// Read-only: this page only checks who is logged in. Holding the session lock
-// while the page renders would block the API calls the page then fires.
-Session::startReadOnly();
-
-if (Session::userId() === null) {
+session_start();
+if (!isset($_SESSION["user_id"])) {
     header("Location: login.html");
     exit;
 }
@@ -19,9 +13,10 @@ if ($__app_base === "." || $__app_base === "/") {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>All American Network</title>
-    <link rel="stylesheet" href="<?= asset('assets/css/app.css') ?>">
-    <link rel="stylesheet" href="<?= asset('assets/css/feed.css') ?>">
+    <link rel="stylesheet" href="app.css">
+    <link rel="stylesheet" href="assets/css/mobile.css">
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -30,7 +25,7 @@ if ($__app_base === "." || $__app_base === "/") {
 <header class="topbar">
 
     <div class="topbar-left">
-        <img src="<?= asset('assets/icons/logo_dark.png') ?>" alt="All American Network" class="mini-logo">
+        <img src="assets/icons/aaa_logo_dark.png" alt="AAA" class="mini-logo">
     </div>
 
     <div class="topbar-center">
@@ -43,13 +38,14 @@ if ($__app_base === "." || $__app_base === "/") {
             <span class="slogan">Be best of the best in every category</span>
         </div>
 
-    </div>
-    
-    <div class="topbar-right">
         <div class="topbar-actions">
             <button class="action-btn small">Daily Goal</button>
             <button class="action-btn">New Highlight Reel of the Day</button>
         </div>
+    </div>
+
+    <div class="topbar-right">
+        <img src="assets/icons/aaa_logo_dark.png" alt="AAA logo" class="main-logo">
     </div>
 
 </header>
@@ -57,237 +53,371 @@ if ($__app_base === "." || $__app_base === "/") {
 <!-- ================= MAIN LAYOUT ================= -->
 <div class="app-shell" data-view="main">
     <div class="layout">
-        <!-- ========== LEFT SIDEBAR: PROFILE ========== -->
-        <aside class="sidebar-left">
-            <div class="profile-card">
 
-                <div class="profile-photo-wrapper">
-                    <div class="profile-photo-inner">
-                        <!-- Neutral placeholder until main.js swaps in the real
-                             avatar. onerror catches a stored path whose file is
-                             missing, so a broken image never reaches the user. -->
-                        <img id="profilePic" src="<?= asset('assets/img/avatar-placeholder.svg') ?>"
-                             data-placeholder="<?= asset('assets/img/avatar-placeholder.svg') ?>"
-                             onerror="this.onerror=null;this.src=this.dataset.placeholder;"
-                             alt="" class="profile-photo">
-                    </div>
-                </div>
+    <nav class="mobile-layout-controls" aria-label="Mobile account and network controls">
+        <button type="button" class="mobile-panel-button" data-mobile-panel="profile" aria-controls="mobile-profile-drawer" aria-expanded="false">
+            <span aria-hidden="true">&#9776;</span> Profile
+        </button>
+        <strong>All American</strong>
+        <button type="button" class="mobile-panel-button" data-mobile-panel="network" aria-controls="mobile-network-drawer" aria-expanded="false">
+            Network <span aria-hidden="true">&#128101;</span>
+        </button>
+    </nav>
 
-                <h2 id="profileName" class="profile-name">Loading...</h2>
-                <a id="profileHandle" class="profile-handle" href="#">@loading</a>
+    <section class="mobile-profile-summary" aria-label="Your profile summary">
+        <button type="button" class="mobile-profile-summary-button" data-mobile-panel="profile" aria-controls="mobile-profile-drawer" aria-expanded="false">
+            <img id="mobileProfilePic" src="assets/img/default-avatar.svg" alt="">
+            <span class="mobile-profile-copy">
+                <strong id="mobileProfileName">Loading...</strong>
+                <span id="mobileProfileHandle">@loading</span>
+                <small id="mobileProfileSport">Sport and position not set</small>
+            </span>
+            <span class="mobile-profile-chevron" aria-hidden="true">&#8250;</span>
+        </button>
+    </section>
 
-                <p id="profileSport" class="profile-role">Sport — Position not set</p>
+    <button type="button" class="mobile-drawer-backdrop" aria-label="Close sidebar" hidden></button>
 
-                <p class="profile-location">
-                    From: <span id="profileLocation">Loading...</span>
-                </p>
+    <!-- ========== LEFT SIDEBAR: PROFILE ========== -->
+  <!-- ========== LEFT SIDEBAR: PROFILE ========== -->
+<aside id="mobile-profile-drawer" class="sidebar-left" aria-label="Profile sidebar">
+    <div class="mobile-drawer-heading">
+        <strong>Your profile</strong>
+        <button type="button" class="mobile-drawer-close" data-mobile-close aria-label="Close profile sidebar">&times;</button>
+    </div>
+    <div class="profile-card">
 
-                <div class="profile-stats">
-                    <div class="stat-card">
-                        <span id="statHighlights" class="stat-value">0</span>
-                        <span class="stat-label">Highlights</span>
-                    </div>
-                    <div class="stat-card">
-                        <span id="statScouts" class="stat-value">0</span>
-                        <span class="stat-label">Scouts Saved</span>
-                    </div>
-                    <div class="stat-card">
-                        <span id="statRating" class="stat-value">0.0</span>
-                        <span class="stat-label">Rating</span>
-                    </div>
-                </div>
-
-                <p id="profileBio" class="profile-description">
-                    Loading bio...
-                </p>
-
-                <p id="profileGoals" class="profile-goals" hidden></p>
-
-                <div class="achievements">
-                    <h4>Achievements</h4>
-                    <p>Likes: <span id="badgeLikes">0</span></p>
-                </div>
-
-                <button id="btn-edit-profile" class="edit-profile-btn">Edit Profile</button>
-
+        <div class="profile-photo-wrapper">
+            <div class="profile-photo-inner">
+                <img id="profilePic" src="assets/img/default-avatar.svg" class="profile-photo" alt="Profile picture">
             </div>
-            
-            <!-- log out button -->
-            <!-- Place this inside your left sidebar container, ideally at the bottom -->
-                <div class="sidebar-logout-container">
-                    <a href="logout.php" class="logout-btn">
-                        <svg class="logout-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                            <polyline points="16 17 21 12 16 7"></polyline>
-                            <line x1="21" y1="12" x2="9" y2="12"></line>
-                        </svg>
-                        <span>Logout</span>
-                    </a>
-                </div>
-
-        </aside>
-        <!-- ========== PROFILE EDITOR (HIDDEN BY DEFAULT) ========== -->
-        <div class="profile-shell" data-view="profile" style="display:none;">
-
-            <div class="profile-edit-card">
-
-                <h2>Edit Profile</h2>
-
-                <form id="profile-form">
-
-                    <p id="profile-form-error" class="profile-form-error" style="display:none;"></p>
-
-                    <div class="profile-row">
-                        <div>
-                            <label for="profile-first-name">First name</label>
-                            <input type="text" id="profile-first-name" name="first_name" placeholder="First name" required>
-                        </div>
-                        <div>
-                            <label for="profile-last-name">Last name</label>
-                            <input type="text" id="profile-last-name" name="last_name" placeholder="Last name">
-                        </div>
-                    </div>
-
-                    <label for="profile-username">Username</label>
-                    <input type="text" id="profile-username" name="username" placeholder="username (appears as @username)" required autocomplete="username">
-
-                    <label for="profile-sport">Sport</label>
-                    <input type="text" id="profile-sport" name="sport" placeholder="Football, basketball, etc.">
-
-                    <label for="profile-position">Position</label>
-                    <input type="text" id="profile-position" name="position" placeholder="e.g. WR, Point guard">
-
-                    <div class="profile-row">
-                        <div>
-                            <label for="profile-city">City</label>
-                            <input type="text" id="profile-city" name="city" placeholder="City">
-                        </div>
-                        <div>
-                            <label for="profile-state">State</label>
-                            <input type="text" id="profile-state" name="state" placeholder="State">
-                        </div>
-                    </div>
-
-                    <label for="profile-bio">Bio</label>
-                    <textarea id="profile-bio" name="bio" placeholder="Tell us about yourself"></textarea>
-
-                    <label for="profile-picture">Profile picture</label>
-                    <input type="file" id="profile-picture" name="profile_picture" accept="image/*">
-                    <img id="profile-picture-preview" class="profile-picture-preview"
-                         src="<?= asset('assets/img/avatar-placeholder.svg') ?>"
-                         data-placeholder="<?= asset('assets/img/avatar-placeholder.svg') ?>"
-                         onerror="this.onerror=null;this.src=this.dataset.placeholder;"
-                         alt="Profile picture preview">
-                    <label class="profile-remove-pic-label" for="profile-remove-picture">
-                        <input type="checkbox" id="profile-remove-picture" name="remove_picture" value="1">
-                        Remove current profile picture
-                    </label>
-
-                    <label for="profile-goals-input">Goals</label>
-                    <textarea id="profile-goals-input" name="goals" placeholder="Your athletic or season goals"></textarea>
-
-                    <div class="profile-form-actions">
-                        <button type="submit" class="save-profile-btn">Save profile</button>
-                        <button type="button" class="cancel-profile-btn" onclick="setAppStage('main')">Cancel</button>
-                    </div>
-
-                </form>
-
-            </div>
-
         </div>
 
-        <!-- ========== CENTER FEED ========== -->
-        <main class="center-feed">
+        <h2 id="profileName" class="profile-name">Loading...</h2>
+        <a id="profileHandle" class="profile-handle" href="#">@loading</a>
 
-            <!-- Sport / blog categories (rendered from the categories API) -->
-            <div class="sports-tabs" id="category-tabs"></div>
+        <p id="profileSport" class="profile-role">Sport — Position not set</p>
 
-            <!-- Stories -->
-            <section class="stories-panel">
-                <div id="story-bar" class="story-bar"></div>
-            </section>
+        <p class="profile-location">
+            From: <span id="profileLocation">Loading...</span>
+        </p>
 
-            <!-- Composer -->
-            <section class="composer-panel">
-                <form id="composer-form" class="composer">
-                    <input type="text" id="composer-title" class="composer-input" placeholder="Title (optional)">
+        <div class="profile-stats">
+            <div class="stat-card">
+                <span id="statHighlights" class="stat-value">0</span>
+                <span class="stat-label">Highlights</span>
+            </div>
+            <div class="stat-card">
+                <span id="statScouts" class="stat-value">0</span>
+                <span class="stat-label">Scouts Saved</span>
+            </div>
+            <div class="stat-card">
+                <span id="statRating" class="stat-value">0.0</span>
+                <span class="stat-label">Rating</span>
+            </div>
+        </div>
 
-                    <textarea id="composer-content" class="composer-input" rows="3"
-                            placeholder="Share your All American moment..." required></textarea>
+        <p id="profileBio" class="profile-description">
+            Loading bio...
+        </p>
 
-                    <div id="composer-preview" class="composer-preview"></div>
+        <p id="profileGoals" class="profile-goals" hidden></p>
 
-                    <div class="composer-actions">
-                        <label class="composer-file">
-                            <input type="file" id="composer-media" accept="image/*,video/*" multiple hidden>
-                            <span>Photo / Video</span>
-                        </label>
+        <div class="achievements">
+            <h4>Achievements</h4>
+            <p>Likes: <span id="badgeLikes">0</span></p>
+        </div>
 
-                        <select id="composer-category" class="composer-visibility">
-                            <option value="">No category</option>
-                        </select>
+        <button id="btn-edit-profile" class="edit-profile-btn">Edit Profile</button>
 
-                        <select id="composer-visibility" class="composer-visibility">
-                            <option value="public">Public</option>
-                            <option value="private">Private (only me)</option>
-                        </select>
+    </div>
+	
+	<!-- log out button -->
+	<!-- Place this inside your left sidebar container, ideally at the bottom -->
+		<div class="sidebar-logout-container">
+			<a href="logout.php" class="logout-btn">
+				<svg class="logout-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+					<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+					<polyline points="16 17 21 12 16 7"></polyline>
+					<line x1="21" y1="12" x2="9" y2="12"></line>
+				</svg>
+				<span>Logout</span>
+			</a>
+		</div>
 
-                        <button type="submit" class="btn-primary">New Post</button>
+</aside>
+<!-- ========== PROFILE EDITOR (HIDDEN BY DEFAULT) ========== -->
+<div class="profile-shell" data-view="profile" style="display:none;">
+
+    <div class="profile-edit-card">
+
+        <h2>Edit Profile</h2>
+
+        <form id="profile-form">
+
+            <p id="profile-form-error" class="profile-form-error" style="display:none;"></p>
+
+            <div class="profile-row">
+                <div>
+                    <label for="profile-first-name">First name</label>
+                    <input type="text" id="profile-first-name" name="first_name" placeholder="First name" required>
+                </div>
+                <div>
+                    <label for="profile-last-name">Last name</label>
+                    <input type="text" id="profile-last-name" name="last_name" placeholder="Last name">
+                </div>
+            </div>
+
+            <label for="profile-username">Username</label>
+            <input type="text" id="profile-username" name="username" placeholder="username (appears as @username)" required autocomplete="username">
+
+            <label for="profile-sport">Sport</label>
+            <input type="text" id="profile-sport" name="sport" placeholder="Football, basketball, etc.">
+
+            <label for="profile-position">Position</label>
+            <input type="text" id="profile-position" name="position" placeholder="e.g. WR, Point guard">
+
+            <div class="profile-row">
+                <div>
+                    <label for="profile-city">City</label>
+                    <input type="text" id="profile-city" name="city" placeholder="City">
+                </div>
+                <div>
+                    <label for="profile-state">State</label>
+                    <input type="text" id="profile-state" name="state" placeholder="State">
+                </div>
+            </div>
+
+            <label for="profile-bio">Bio</label>
+            <textarea id="profile-bio" name="bio" placeholder="Tell us about yourself"></textarea>
+
+            <label for="profile-picture">Profile picture</label>
+            <input type="file" id="profile-picture" name="profile_picture" accept="image/*">
+            <img id="profile-picture-preview" class="profile-picture-preview" src="assets/img/default-avatar.svg" alt="Profile picture preview">
+            <label class="profile-remove-pic-label" for="profile-remove-picture">
+                <input type="checkbox" id="profile-remove-picture" name="remove_picture" value="1">
+                Remove current profile picture
+            </label>
+
+            <label for="profile-goals-input">Goals</label>
+            <textarea id="profile-goals-input" name="goals" placeholder="Your athletic or season goals"></textarea>
+
+            <div class="profile-form-actions">
+                <button type="submit" class="save-profile-btn">Save profile</button>
+                <button type="button" class="cancel-profile-btn" onclick="setAppStage('main')">Cancel</button>
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+    <!-- ========== CENTER FEED ========== -->
+    <main class="center-feed">
+
+        <!-- Sports Tabs -->
+        <div class="sports-tabs">
+            <button class="tab active">All Sports</button>
+            <button class="tab">Football</button>
+            <button class="tab">Basketball</button>
+            <button class="tab">Baseball</button>
+            <button class="tab">Soccer</button>
+            <button class="tab">Hockey</button>
+            <button class="tab">Tennis</button>
+            <button class="tab">Golf</button>
+            <button class="tab">Track & Field</button>
+            <button class="tab">Wrestling</button>
+            <button class="tab">Volleyball</button>
+        </div>
+
+        <!-- Facebook-style story rail: five network stories at a time -->
+        <section class="story-strip-section" aria-labelledby="story-strip-title">
+            <div class="story-strip-heading">
+                <div>
+                    <h2 id="story-strip-title">All American Stories</h2>
+                    <p>Fresh moments from your network</p>
+                </div>
+                <button id="story-refresh" class="story-refresh" type="button">Refresh</button>
+            </div>
+            <div class="story-carousel">
+                <button id="story-prev" class="story-arrow story-arrow-prev" type="button" aria-label="Previous stories">&#8249;</button>
+                <div id="story-rail" class="story-rail" aria-live="polite">
+                    <p class="story-rail-loading">Loading your network stories...</p>
+                </div>
+                <button id="story-next" class="story-arrow story-arrow-next" type="button" aria-label="Next stories">&#8250;</button>
+            </div>
+        </section>
+
+        <!-- Feed / Stories / Reels tabs -->
+        <div class="feed-toggle">
+            <button type="button" class="toggle-btn active" data-feed-panel="posts">Feed</button>
+            <button type="button" class="toggle-btn" data-feed-panel="stories">Stories</button>
+            <button type="button" class="toggle-btn" data-feed-panel="reels">Reels</button>
+        </div>
+
+        <!-- Story upload and live story board -->
+        <section class="stories-panel" aria-label="Stories">
+            <form id="story-upload-form" class="story-composer" enctype="multipart/form-data">
+                <div class="story-composer-heading">
+                    <div>
+                        <h2>Add a story</h2>
+                        <p>Share a photo or a video up to 15 seconds. Stories expire after 24 hours.</p>
                     </div>
+                    <label class="story-file-button" for="story-media">Choose media</label>
+                </div>
+                <input id="story-media" name="media" type="file"
+                       accept="image/jpeg,image/png,image/gif,video/mp4,video/webm,video/quicktime,video/3gpp,video/x-m4v"
+                       required hidden>
+                <div id="story-preview" class="story-preview" hidden></div>
+                <div class="story-composer-row">
+                    <input id="story-caption" name="caption" type="text" maxlength="500"
+                           placeholder="Add a caption (optional)">
+                    <button id="story-submit" class="story-submit" type="submit">Post story</button>
+                </div>
+                <p id="story-upload-status" class="story-status" role="status" aria-live="polite"></p>
+            </form>
 
-                    <p id="composer-category-hint" class="composer-category-hint"></p>
-
-                    <p id="composer-status" class="composer-status" style="display:none;"></p>
-                </form>
-            </section>
-
-            <!-- Posts feed -->
-            <section class="posts-panel">
-                <div id="feed-list"></div>
-                <div id="feed-pagination" class="feed-pagination"></div>
-            </section>
-
-        </main>
-
-        <!-- ========== RIGHT SIDEBAR: NETWORK ========== -->
-        <aside class="sidebar-right">
-            <div class="sidebar-header">
-                <h3 class="sidebar-title">Network Friends</h3>
-                <!-- Added missing online counter -->
-                <span class="online-count" id="onlineCount">0 Online</span>
+            <div class="story-board-header"><h2>Story activity</h2></div>
+            <div id="story-feed" class="story-feed" aria-live="polite">
+                <p class="story-empty">Loading stories...</p>
             </div>
-            
-            <!-- Added missing dynamic list container -->
-            <!-- 1. Accepted friends -->
-            <ul id="friendsList" class="friends-list">
-                <li class="loading-friends">Loading network...</li>
-            </ul>
+        </section>
 
-            <!-- 2. Requests I sent, still pending -->
-            <div id="friend-sent" class="friend-group"></div>
+        <!-- Posts feed -->
+        <section class="posts-panel">
+            <form id="daily-post-form" class="daily-post-composer" enctype="multipart/form-data">
+                <div class="daily-post-heading">
+                    <div class="avatar avatar-current">You</div>
+                    <textarea id="daily-post-content" name="content" maxlength="5000"
+                              placeholder="Share your All American moment..." aria-label="Write a daily post"></textarea>
+                </div>
+                <div id="daily-post-preview" class="daily-post-preview" hidden></div>
+                <div class="daily-post-tools">
+                    <label class="daily-post-tool" for="daily-post-images">Photo</label>
+                    <input id="daily-post-images" name="images[]" type="file" accept="image/jpeg,image/png,image/gif" multiple hidden>
+                    <label class="daily-post-tool" for="daily-post-video">Video</label>
+                    <input id="daily-post-video" name="video" type="file" accept="video/mp4,video/webm,video/quicktime,video/x-m4v" hidden>
+                    <span class="daily-rating-hint">Your network can rate it from 1 to 5 stars</span>
+                    <button id="daily-post-submit" class="daily-post-submit" type="submit">Post</button>
+                </div>
+                <p id="daily-post-status" class="daily-post-status" role="status" aria-live="polite"></p>
+            </form>
 
-            <!-- 3. Requests waiting on my response -->
-            <div id="friend-requests" class="friend-group"></div>
-
-            <div class="add-friend-card">
-                <h4>Add to your circle</h4>
-                <input type="text" id="friend-search-input" placeholder="Search or add by name">
-                
-                <!-- ADD THIS CONTAINER FOR DYNAMIC SEARCH RESULTS -->
-                <ul id="search-results-dropdown" class="search-results-dropdown" style="display:none; list-style:none; padding:0; margin: 10px 0; background: #fff; border-radius: 6px;"></ul>
-                
-                <button class="add-friend-btn" id="add-friend-submit-btn">Add Friend</button>
+            <div class="daily-feed-heading">
+                <h2>Daily Feed</h2>
+                <button id="daily-feed-refresh" type="button">Refresh</button>
             </div>
-        </aside>
-    </div> <!-- end layout -->
+            <div id="daily-post-list"></div>
+
+            <article class="post-card featured-post-card">
+                <header class="post-header">
+                    <div class="post-user">
+                        <div class="avatar">JW</div>
+                        <div>
+                            <h3 class="post-author">Jordan Walker</h3>
+                            <p class="post-meta">Varsity • 4.8 avg • 2h ago</p>
+                        </div>
+                    </div>
+                    <span class="post-tag">Friday Night Lights</span>
+                </header>
+
+                <p class="post-caption js-link-mentions">
+                    Corner route, 4th & goal. Trusted the work, trusted the QB.
+                    Shoutout to @charles_test for the scout notes. All American moments are built on days like this.
+                </p>
+
+                <div class="post-media-wrapper">
+                    <img src="https://images.unsplash.com/photo-1518604666860-9ed391f76460?auto=format&fit=crop&w=1400&q=80"
+                         class="post-media" alt="Highlight">
+                </div>
+
+                <div class="post-rating-row">
+                    <span class="rating-label">Community Rating:</span>
+                    <span class="rating-stars">★★★★☆</span>
+                </div>
+
+                <div class="post-actions">
+                    <button class="post-btn active">Comment</button>
+                    <button class="post-btn active">Share</button>
+                    <button class="post-btn active">Save</button>
+                    <button class="post-btn active">Message</button>
+                </div>
+
+                <div class="post-comments">
+                    <div class="comment-row">
+                        <div class="avatar-small">SC</div>
+                        <div>
+                            <p class="comment-author">Scout Central</p>
+                            <p class="comment-text js-link-mentions">
+                                Route discipline, separation, and hands. Ask @fletch if you want a second look.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </article>
+
+        </section>
+
+        <section class="reels-panel" aria-label="All American Reels">
+            <div class="reels-heading">
+                <div>
+                    <h2>All American Reels</h2>
+                    <p>Short videos from athletes in your network</p>
+                </div>
+            </div>
+            <div id="reels-feed" class="reels-feed">
+                <p class="story-empty">Loading reels...</p>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ========== RIGHT SIDEBAR: NETWORK ========== -->
+<!-- ========== RIGHT SIDEBAR: NETWORK ========== -->
+<aside id="mobile-network-drawer" class="sidebar-right" aria-label="Network sidebar">
+    <div class="mobile-drawer-heading">
+        <strong>Your network</strong>
+        <button type="button" class="mobile-drawer-close" data-mobile-close aria-label="Close network sidebar">&times;</button>
+    </div>
+    <div class="sidebar-header">
+        <h3 class="sidebar-title">Network Friends</h3>
+        <!-- Added missing online counter -->
+        <span class="online-count" id="onlineCount">0 Online</span>
+    </div>
+    
+    <!-- Added missing dynamic list container -->
+    <ul id="friendsList" class="friends-list">
+        <li class="loading-friends">Loading network...</li>
+    </ul>
+
+  <div class="add-friend-card">
+    <h4>Add to your circle</h4>
+    <input type="text" id="friend-search-input" placeholder="Search or add by name">
+    
+    <!-- ADD THIS CONTAINER FOR DYNAMIC SEARCH RESULTS -->
+    <ul id="search-results-dropdown" class="search-results-dropdown" style="display:none; list-style:none; padding:0; margin: 10px 0; background: #fff; border-radius: 6px;"></ul>
+    
+    <button class="add-friend-btn" id="add-friend-submit-btn">Add Friend</button>
+</div>
+</aside>
+
+
+
+
+</div> <!-- end layout -->
 </div>  <!-- end app-shell -->
-
-<script>window.__APP_BASE__ = <?= json_encode($__app_base, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;</script>
-<script src="<?= asset('assets/js/api.js') ?>"></script>
-<script src="<?= asset('assets/js/main.js') ?>"></script>
-<script src="<?= asset('assets/js/feed.js') ?>"></script>
-<script src="<?= asset('assets/js/network-friends.js') ?>"></script>
+<script>
+window.__APP_BASE__ = <?= json_encode($__app_base, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+window.__CURRENT_USER_ID__ = <?= (int)$_SESSION['user_id'] ?>;
+</script>
+<script src="assets/js/main.js"></script>
+<script src="assets/js/ratings.js"></script>
+<script src="assets/js/stories.js"></script>
+<script src="assets/js/posts.js"></script>
+<script src="assets/js/network-friends.js"></script>
+<script src="assets/js/mobile-layout.js"></script>
 
 </body>
 </html>

@@ -1,7 +1,7 @@
 <?php
 require __DIR__ . "/config/db.php";
-require_once __DIR__ . '/core/Session.php';
-Session::start();
+require_once __DIR__ . "/controllers/RatingController.php";
+session_start();
 
 header("Content-Type: application/json");
 
@@ -11,6 +11,10 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 $user_id = (int) $_SESSION['user_id'];
+$ratingReady = RatingController::ensureTable();
+$ratingSelect = $ratingReady
+    ? "(SELECT AVG(cr.rating) FROM community_ratings cr WHERE cr.target_type = 'profile' AND cr.target_id = u.id)"
+    : "(SELECT AVG(NULLIF(p.rating, 0)) FROM posts p WHERE p.user_id = u.id)";
 
 $stmt = $pdo->prepare("
     SELECT u.id,
@@ -26,7 +30,7 @@ $stmt = $pdo->prepare("
            u.goals,
            u.profile_pic,
            COALESCE(b.likes, 0) AS likes,
-           (SELECT AVG(NULLIF(p.rating, 0)) FROM posts p WHERE p.user_id = u.id) AS community_rating,
+           {$ratingSelect} AS community_rating,
            (SELECT COUNT(*) FROM highlights h WHERE h.user_id = u.id) AS num_highlights,
            (SELECT COUNT(*) FROM saved_posts s WHERE s.user_id = u.id) AS num_saved_posts
     FROM users u

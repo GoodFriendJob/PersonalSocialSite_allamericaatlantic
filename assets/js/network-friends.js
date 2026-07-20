@@ -1,353 +1,144 @@
-/**
- * Right sidebar: friend list, search, requests.
- *
- * The previous version called app/routes/search_users.php, get_friends.php and
- * send_request.php. The first two were fatal on load (require 'config.php',
- * which does not exist) and the third was never written. All three are now
- * replaced by FriendController routes.
- */
-(function () {
-  "use strict";
+// Java Document// js/network-sidebar.js
 
-  const friendsList = document.getElementById("friendsList");
-  const searchInput = document.getElementById("friend-search-input");
-  const dropdown = document.getElementById("search-results-dropdown");
-  const addBtn = document.getElementById("add-friend-submit-btn");
-  const countEl = document.getElementById("onlineCount");
-  const requestsList = document.getElementById("friend-requests");
-  const sentList = document.getElementById("friend-sent");
+document.addEventListener("DOMContentLoaded", () => {
+    // 1. Run your active friends list loader right away
+    fetchFriendsNetwork(); 
 
-  if (!friendsList) return;
+    const searchInput = document.getElementById('friend-search-input');
+    const resultsDropdown = document.getElementById('search-results-dropdown');
 
-  let friendCount = 0;
-  let sentCount = 0;
+    // 2. Listen for dynamic live typing in the search input box
+    searchInput.addEventListener('input', debounce(async function(e) {
+        const query = e.target.value.trim();
+        
+        if (query.length < 2) {
+            resultsDropdown.innerHTML = '';
+            resultsDropdown.style.display = 'none';
+            return;
+        }
 
-  /** Header shows both totals: accepted friends and outgoing requests. */
-  function updateHeaderCount() {
-    if (!countEl) return;
+        try {
+            const response = await fetch(`app/routes/search_users.php?q=${encodeURIComponent(query)}`);
+            const data = await response.json();
 
-    countEl.textContent =
-      friendCount + (friendCount === 1 ? " friend" : " friends") +
-      (sentCount ? " · " + sentCount + " requested" : "");
-  }
+            resultsDropdown.innerHTML = '';
 
-  /**
-   * Initial paint comes from the shared bootstrap request that feed.js also
-   * awaits — three calls on load become zero extra round trips. If it fails
-   * (expired session, network), fall back to fetching each section directly so
-   * the sidebar still has a chance to render.
-   */
-  Api.bootstrap().then(
-    function (boot) {
-      renderFriends(boot.friends || []);
-      renderSent(boot.friend_sent || []);
-      renderRequests(boot.friend_requests || []);
-    },
-    function () {
-      refreshAll();
-    }
-  );
+            if (data.success && data.users && data.users.length > 0) {
+                resultsDropdown.style.display = 'block';
+                
+                data.users.forEach(user => {
+                    const li = document.createElement('li');
+                    li.style.cssText = "display:flex; justify-content:space-between; align-items:center; padding:8px 12px; border-bottom:1px solid #eee;";
+                    const label = document.createElement('span');
+                    label.style.cssText = 'color:#333; font-weight:bold;';
+                    label.textContent = `@${user.username}`;
+                    const button = document.createElement('button');
+                    button.className = 'send-req-btn';
+                    button.dataset.id = String(user.id);
+                    button.style.cssText = 'background:#003366; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:12px;';
+                    button.textContent = user.friendship_status === 'accepted' ? 'Friends' : (user.friendship_status ? 'Pending' : 'Add');
+                    button.disabled = Boolean(user.friendship_status);
+                    li.append(label, button);
+                    resultsDropdown.appendChild(li);
+                });
 
-  /** Refetches every section. Used after accepting/declining/adding. */
-  function refreshAll() {
-    loadFriends();
-    loadSent();
-    loadRequests();
-  }
+                attachRequestButtonListeners();
+            } else {
+                resultsDropdown.style.display = 'block';
+                resultsDropdown.innerHTML = '<li style="padding:8px 12px; color:#666; font-size:14px;">No members found</li>';
+            }
+        } catch (error) {
+            console.error("Error searching for network profiles:", error);
+        }
+    }, 300));
+});
 
-  /* ===================== FRIEND LIST ===================== */
-  async function loadFriends() {
+// 3. Fetch active friends network from the database
+async function fetchFriendsNetwork() {
     try {
-      const data = await Api.get("friends");
-      renderFriends(data.friends || []);
-    } catch (err) {
-      friendsList.innerHTML = '<li class="loading-friends">Could not load your network.</li>';
+        const response = await fetch('app/routes/get_friends.php');
+        if (!response.ok) throw new Error("Network status update failed: " + response.status);
+        const data = await response.json();
+        const friendsList = document.getElementById('friendsList');
+        let onlineCounter = 0;
+        
+        if (data.success && data.friends && data.friends.length > 0) {
+            friendsList.innerHTML = '';
+            data.friends.forEach(friend => {
+                if (friend.is_online) onlineCounter++;
+                const statusClass = friend.is_online ? 'online' : 'offline';
+                const statusText = friend.is_online ? 'Active Now' : 'Offline';
+                const picture = friend.profile_pic || 'assets/img/default-avatar.svg';
+                const item = document.createElement('li');
+                item.className = 'friend-item';
+                const avatarContainer = document.createElement('div');
+                avatarContainer.className = 'avatar-container';
+                const img = document.createElement('img');
+                img.className = 'avatar';
+                img.src = picture;
+                img.alt = '';
+                const indicator = document.createElement('div');
+                indicator.className = `status-indicator ${statusClass}`;
+                avatarContainer.append(img, indicator);
+                const info = document.createElement('div');
+                info.className = 'friend-info';
+                const name = document.createElement('h4');
+                name.textContent = friend.username;
+                const status = document.createElement('p');
+                status.textContent = statusText;
+                info.append(name, status);
+                item.append(avatarContainer, info);
+                friendsList.appendChild(item);
+            });
+            document.getElementById('onlineCount').innerText = `${onlineCounter} Online`;
+        } else {
+            friendsList.innerHTML = '<li class="loading-friends">No friends in your network yet.</li>';
+        }
+    } catch (error) {
+        console.error("Error fetching friends network:", error);
+        const friendsList = document.getElementById('friendsList');
+        if (friendsList) friendsList.innerHTML = '<li class="loading-friends">Error loading network. Check console.</li>';
     }
-  }
+}
 
-  function renderFriends(friends) {
-    friendCount = friends.length;
-    updateHeaderCount();
+// 4. Action function to send the friend request payload
+function attachRequestButtonListeners() {
+    document.querySelectorAll('.send-req-btn').forEach(btn => {
+        btn.addEventListener('click', async function() {
+            const receiverId = this.getAttribute('data-id');
+            this.disabled = true;
+            this.textContent = 'Sending...';
 
-    if (!friends.length) {
-      friendsList.innerHTML = '<li class="loading-friends">No friends yet — search for someone below.</li>';
-      return;
-    }
+            try {
+                const response = await fetch('app/routes/send_request.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ receiver_id: receiverId })
+                });
+                const result = await response.json();
 
-    friendsList.innerHTML = friends
-      .map(function (f) {
-        const name = [f.first_name, f.last_name].filter(Boolean).join(" ") || f.username;
-        const avatar = f.profile_pic
-          ? '<img class="friend-avatar" src="' + Api.escape(Api.assetUrl(f.profile_pic)) + '" alt="">'
-          : '<div class="avatar-small">' + Api.escape(f.username.slice(0, 2).toUpperCase()) + "</div>";
-
-        return (
-          '<li class="friend-row" data-user-id="' + f.id + '">' + avatar +
-            '<div class="friend-info">' +
-              '<p class="friend-name">' + Api.escape(name) + "</p>" +
-              '<p class="friend-role">@' + Api.escape(f.username) +
-                (f.sport ? " · " + Api.escape(f.sport) : "") + "</p>" +
-            "</div>" +
-            '<button class="friend-message-btn" data-message="' + f.id + '" type="button">Message</button>' +
-          "</li>"
-        );
-      })
-      .join("");
-
-    friendsList.querySelectorAll("[data-message]").forEach(function (btn) {
-      btn.addEventListener("click", function () {
-        messageUser(btn.dataset.message);
-      });
+                if (response.ok && result.success) {
+                    this.textContent = 'Sent';
+                    this.style.background = '#6c757d';
+                } else {
+                    alert(result.error || 'Failed sending request.');
+                    this.disabled = false;
+                    this.textContent = 'Add';
+                }
+            } catch (error) {
+                console.error("Request execution failure:", error);
+                this.disabled = false;
+                this.textContent = 'Add';
+            }
+        });
     });
-  }
+}
 
-  /* ============= OUTGOING REQUESTS (I asked them) ========= */
-  async function loadSent() {
-    if (!sentList) return;
-
-    try {
-      const data = await Api.get("friends/sent");
-      renderSent(data.requests || []);
-    } catch (err) {
-      sentList.innerHTML = "";
-    }
-  }
-
-  /** Split out from loadSent so the bootstrap payload can render directly. */
-  function renderSent(requests) {
-    if (!sentList) return;
-
-    sentCount = requests.length;
-    updateHeaderCount();
-
-    if (!requests.length) {
-      sentList.innerHTML = "";
-      return;
-    }
-
-    sentList.innerHTML =
-        '<h4 class="requests-title">Friend requested <span class="group-count">' +
-          requests.length + "</span></h4>" +
-        requests
-          .map(function (r) {
-            const name = [r.first_name, r.last_name].filter(Boolean).join(" ") || r.username;
-            const avatar = r.profile_pic
-              ? '<img class="friend-avatar" src="' + Api.escape(Api.assetUrl(r.profile_pic)) + '" alt="">'
-              : '<div class="avatar-small">' + Api.escape(r.username.slice(0, 2).toUpperCase()) + "</div>";
-
-            return (
-              '<div class="request-row" data-sent="' + r.id + '">' + avatar +
-                '<div class="friend-info">' +
-                  '<p class="friend-name">' + Api.escape(name) + "</p>" +
-                  '<p class="friend-role">@' + Api.escape(r.username) + " · pending</p>" +
-                "</div>" +
-                '<button class="request-cancel" data-cancel="' + r.id + '" type="button">Cancel request</button>' +
-              "</div>"
-            );
-          })
-          .join("");
-
-    sentList.querySelectorAll("[data-cancel]").forEach(function (btn) {
-      btn.addEventListener("click", function () {
-        cancelRequest(btn.dataset.cancel, btn);
-      });
-    });
-  }
-
-  async function cancelRequest(userId, btn) {
-    btn.disabled = true;
-    btn.textContent = "Cancelling…";
-
-    try {
-      await Api.del("friends/" + userId);
-      refreshAll();
-    } catch (err) {
-      alert("Could not cancel the request: " + err.message);
-      btn.disabled = false;
-      btn.textContent = "Cancel request";
-    }
-  }
-
-  /* =================== INCOMING REQUESTS ================== */
-  async function loadRequests() {
-    if (!requestsList) return;
-
-    try {
-      const data = await Api.get("friends/pending");
-      renderRequests(data.requests || []);
-    } catch (err) {
-      requestsList.innerHTML = "";
-    }
-  }
-
-  /** Split out from loadRequests so the bootstrap payload can render directly. */
-  function renderRequests(requests) {
-    if (!requestsList) return;
-
-    if (!requests.length) {
-      requestsList.innerHTML = "";
-      return;
-    }
-
-    requestsList.innerHTML =
-        '<h4 class="requests-title">Requests received <span class="group-count">' +
-          requests.length + "</span></h4>" +
-        requests
-          .map(function (r) {
-            const name = [r.first_name, r.last_name].filter(Boolean).join(" ") || r.username;
-            return (
-              '<div class="request-row" data-request="' + r.id + '">' +
-                '<span class="request-name">' + Api.escape(name) + "</span>" +
-                '<button class="request-accept" data-accept="' + r.id + '" type="button">Accept</button>' +
-                '<button class="request-decline" data-decline="' + r.id + '" type="button">Decline</button>' +
-              "</div>"
-            );
-          })
-          .join("");
-
-    requestsList.querySelectorAll("[data-accept]").forEach(function (btn) {
-      btn.addEventListener("click", function () {
-        respond(btn.dataset.accept, "accept");
-      });
-    });
-    requestsList.querySelectorAll("[data-decline]").forEach(function (btn) {
-      btn.addEventListener("click", function () {
-        respond(btn.dataset.decline, "decline");
-      });
-    });
-  }
-
-  async function respond(userId, action) {
-    try {
-      await Api.post("friends/" + userId + "/" + action);
-      refreshAll();
-    } catch (err) {
-      alert("Could not " + action + " the request: " + err.message);
-    }
-  }
-
-  /* ======================== SEARCH ======================== */
-  if (searchInput) {
-    searchInput.addEventListener("input", debounce(runSearch, 300));
-  }
-
-  if (addBtn) {
-    addBtn.addEventListener("click", function () {
-      if (!searchInput.value.trim()) {
-        searchInput.focus();
-        return;
-      }
-      runSearch();
-    });
-  }
-
-  async function runSearch() {
-    const q = searchInput.value.trim();
-
-    if (q.length < 2) {
-      hideDropdown();
-      return;
-    }
-
-    try {
-      const data = await Api.get("friends/search", { q: q });
-      renderSearch(data.results || []);
-    } catch (err) {
-      dropdown.innerHTML = '<li class="search-empty">Search failed.</li>';
-      dropdown.style.display = "block";
-    }
-  }
-
-  function renderSearch(results) {
-    if (!results.length) {
-      dropdown.innerHTML = '<li class="search-empty">No users found.</li>';
-      dropdown.style.display = "block";
-      return;
-    }
-
-    dropdown.innerHTML = results
-      .map(function (u) {
-        const name = [u.first_name, u.last_name].filter(Boolean).join(" ") || u.username;
-        return (
-          '<li class="search-row">' +
-            '<span class="search-name">' + Api.escape(name) +
-              ' <span class="search-handle">@' + Api.escape(u.username) + "</span></span>" +
-            friendshipButton(u) +
-          "</li>"
-        );
-      })
-      .join("");
-
-    dropdown.style.display = "block";
-
-    dropdown.querySelectorAll("[data-add]").forEach(function (btn) {
-      btn.addEventListener("click", function () {
-        sendRequest(btn.dataset.add, btn);
-      });
-    });
-  }
-
-  function friendshipButton(user) {
-    switch (user.friendship) {
-      case "accepted":
-        return '<span class="search-status">Friends</span>';
-      case "pending_sent":
-        return '<span class="search-status">Requested</span>';
-      case "pending_received":
-        return '<button class="search-add" data-add="' + user.id + '" type="button">Accept</button>';
-      case "blocked":
-        return '<span class="search-status">Blocked</span>';
-      default:
-        return '<button class="search-add" data-add="' + user.id + '" type="button">Add</button>';
-    }
-  }
-
-  async function sendRequest(userId, btn) {
-    btn.disabled = true;
-    try {
-      const res = await Api.post("friends/" + userId + "/request");
-      btn.outerHTML =
-        '<span class="search-status">' + (res.friendship === "accepted" ? "Friends" : "Requested") + "</span>";
-
-      // refreshAll so the new request shows up under "Friend requested" too.
-      refreshAll();
-    } catch (err) {
-      alert(err.message);
-      btn.disabled = false;
-    }
-  }
-
-  function hideDropdown() {
-    if (!dropdown) return;
-    dropdown.innerHTML = "";
-    dropdown.style.display = "none";
-  }
-
-  document.addEventListener("click", function (e) {
-    if (dropdown && !dropdown.contains(e.target) && e.target !== searchInput && e.target !== addBtn) {
-      hideDropdown();
-    }
-  });
-
-  /* ======================== HELPERS ======================= */
-  async function messageUser(userId) {
-    const body = prompt("Send a message:");
-    if (!body) return;
-
-    try {
-      const thread = await Api.post("threads", { user_id: Number(userId) });
-      await Api.post("threads/" + thread.thread_id + "/messages", { content: body });
-      alert("Message sent.");
-    } catch (err) {
-      alert("Could not send message: " + err.message);
-    }
-  }
-
-  function debounce(fn, delay) {
-    let timer;
-    return function () {
-      clearTimeout(timer);
-      timer = setTimeout(fn, delay);
+// 5. Helper function to throttle database queries while typing
+function debounce(func, delay) {
+    let timeout;
+    return function(...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), delay);
     };
-  }
-})();
+}

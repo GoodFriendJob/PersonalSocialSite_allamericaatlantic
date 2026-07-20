@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>All American Network � App</title>
+
+  <link rel="stylesheet" href="css/app.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+<!-- ========================================================= -->
+<!-- TOP NAV / MOBILE-FIRST HEADER                             -->
+<!-- ========================================================= -->
+<header class="app-header">
+  <div class="header-left">
+    <img src="assets/img/brand-logo.svg" class="header-logo" alt="AAA logo">
+    <h1 class="header-title">All American Network</h1>
+  </div>
+
+  <div class="header-actions">
+    <button id="btn-profile" class="icon-btn"><i class="fa fa-user"></i></button>
+    <button id="btn-friends" class="icon-btn"><i class="fa fa-users"></i></button>
+  </div>
+</header>
+
+<!-- ========================================================= -->
+<!-- PROFILE DRAWER (slides from left)                         -->
+<!-- ========================================================= -->
+<aside id="profile-drawer" class="drawer drawer-left">
+  <div class="drawer-header">
+    <h2>Your Profile</h2>
+    <button class="drawer-close" data-close="profile-drawer">�</button>
+  </div>
+
+  <div class="drawer-body">
+    <div class="profile-avatar-large">JW</div>
+
+    <h3 class="profile-name">Jordan Walker</h3>
+    <p class="profile-handle">@allamericanJW</p>
+
+    <div class="profile-stats">
+      <div class="stat"><span>Highlights</span><strong>24</strong></div>
+      <div class="stat"><span>Scouts Saved</span><strong>17</strong></div>
+      <div class="stat"><span>Rating</span><strong>4.8</strong></div>
+    </div>
+	
+     <div class="profile-achievements">
+       <h3>Achievements</h3>
+       <div id="achievement-list"></div>
+       <button id="btn-add-achievement" class="btn-primary full-width">Add Achievement</button>
+      </div>
+
+    <p class="profile-bio">
+      All American because you stand for truth, do what is right, and bring your best in every category.
+    </p>
+
+    <button class="btn-primary full-width">Edit Profile</button>
+  </div>
+</aside>
+<!-- ========================================================= -->
+<!-- PROFILE EDITING DRAWER                                    -->
+<!-- ========================================================= -->
+<aside id="profile-edit-drawer" class="drawer drawer-right">
+  <div class="drawer-header">
+    <h2>Edit Profile</h2>
+    <button class="drawer-close" data-close="profile-edit-drawer">×</button>
+  </div>
+
+  <form id="profile-edit-form" class="drawer-body" enctype="multipart/form-data">
+
+    <label class="field">
+      <span>Name</span>
+      <input type="text" id="edit-full-name" name="full_name">
+    </label>
+
+    <label class="field">
+      <span>Handle</span>
+      <input type="text" id="edit-handle" name="handle">
+    </label>
+
+    <label class="field">
+      <span>City</span>
+      <input type="text" id="edit-city" name="city">
+    </label>
+
+    <label class="field">
+      <span>State</span>
+      <input type="text" id="edit-state" name="state">
+    </label>
+
+    <label class="field">
+      <span>Bio</span>
+      <textarea id="edit-bio" name="bio"></textarea>
+    </label>
+
+    <label class="field">
+      <span>Achievements</span>
+      <textarea id="edit-achievements" name="achievements"></textarea>
+    </label>
+
+    <label class="field">
+      <span>Avatar</span>
+      <input type="file" id="edit-avatar" name="avatar" accept="image/*">
+    </label>
+
+    <button class="btn-primary full-width" type="submit">Save Changes</button>
+  </form>
+</aside>
+
+<!-- ========================================================= -->
+<!-- FRIENDS DRAWER (slides from right)                        -->
+<!-- ========================================================= -->
+<aside id="friends-drawer" class="drawer drawer-right">
+  <div class="drawer-header">
+    <h2>Your Network</h2>
+    <button class="drawer-close" data-close="friends-drawer">�</button>
+  </div>
+
+  <div class="drawer-body">
+    <ul class="friends-list">
+      <li class="friend-row">
+        <div class="avatar">QB</div>
+        <div>
+          <p class="friend-name">Miles Carter</p>
+          <p class="friend-role">QB � Pocket passer</p>
+        </div>
+      </li>
+
+      <li class="friend-row">
+        <div class="avatar">RB</div>
+        <div>
+          <p class="friend-name">Tariq Jones</p>
+          <p class="friend-role">RB � All-purpose</p>
+        </div>
+      </li>
+
+      <li class="friend-row">
+        <div class="avatar">DB</div>
+        <div>
+          <p class="friend-name">Alex Rivera</p>
+          <p class="friend-role">DB � Lockdown corner</p>
+        </div>
+      </li>
+    </ul>
+
+    <button class="btn-primary full-width">Add Teammate</button>
+  </div>
+</aside>
+<aside id="achievement-drawer" class="drawer drawer-right">
+  <div class="drawer-header">
+    <h2>Add Achievement</h2>
+    <button class="drawer-close" data-close="achievement-drawer">×</button>
+  </div>
+
+  <form id="achievement-form" class="drawer-body">
+
+    <label class="field">
+      <span>Category</span>
+      <select id="ach-category" name="category">
+        <option value="Sports">Sports</option>
+        <option value="Truth">Truth</option>
+        <option value="Leadership">Leadership</option>
+        <option value="Creativity">Creativity</option>
+        <option value="Service">Service</option>
+      </select>
+    </label>
+
+    <label class="field">
+      <span>Title</span>
+      <input type="text" id="ach-title" name="title">
+    </label>
+
+    <label class="field">
+      <span>Description</span>
+      <textarea id="ach-description" name="description"></textarea>
+    </label>
+
+    <label class="field">
+      <span>Badge Color</span>
+      <input type="color" id="ach-color" name="badge_color" value="#003b9b">
+    </label>
+
+    <button class="btn-primary full-width" type="submit">Save Achievement</button>
+  </form>
+</aside>
+
+<!-- ========================================================= -->
+<!-- MAIN FEED (full width)                                    -->
+<!-- ========================================================= -->
+<main class="feed-container">
+
+  <!-- Composer -->
+ <section class="composer card">
+  <input id="composer-title" type="text" placeholder="Title (optional)" class="composer-input">
+
+  <textarea id="composer-content" placeholder="Share your All American moment..." class="composer-input"></textarea>
+
+  <div class="composer-actions">
+    <select id="composer-rating" class="rating-select">
+      <option value="">Rating (optional)</option>
+      <option value="1">1 � Just starting</option>
+      <option value="2">2 � Solid step</option>
+      <option value="3">3 � Strong move</option>
+      <option value="4">4 � Big moment</option>
+      <option value="5">5 � All American worthy</option>
+    </select>
+
+    <button id="composer-post-btn" class="btn-primary">Post</button>
+  </div>
+</section>
+
+<div id="feed-list"></div>
+
+
+  <!-- Sample Post -->
+  <article class="post card">
+    <header class="post-header">
+      <div class="post-user">
+        <div class="avatar">JW</div>
+        <div>
+          <h3 class="post-author">Jordan Walker</h3>
+          <p class="post-meta">Varsity � 4.8 avg � 2h ago</p>
+        </div>
+      </div>
+      <span class="post-tag">Friday Night Lights</span>
+    </header>
+
+    <p class="post-caption">
+      Corner route, 4th & goal. Trusted the work, trusted the QB. All American moments are built on days like this.
+    </p>
+
+    <img class="post-media" src="https://images.unsplash.com/photo-1518604666860-9ed391f76460?auto=format&fit=crop&w=1400&q=80">
+
+    <div class="post-actions">
+      <button class="action-btn">Comment</button>
+      <button class="action-btn">Share</button>
+      <button class="action-btn">Save</button>
+    </div>
+  </article>
+
+</main>
+
+<script src="js/app.js"></script>
+</body>
+</html>

@@ -11,30 +11,21 @@ class ThreadController {
         $user = AuthMiddleware::requireAuth();
         list($page, $limit, $offset) = Pagination::getPageLimit();
 
-        // Each placeholder is named separately: the connection uses native
-        // prepares (emulation off), which does not allow reusing one name.
         $stmt = $pdo->prepare(
-            "SELECT t.id, t.created_at, t.last_message_at,
-                    u.id AS other_user_id,
-                    u.username AS other_user,
-                    u.profile_pic AS other_user_pic,
-                    (SELECT m.content FROM messages m
-                      WHERE m.thread_id = t.id
-                      ORDER BY m.created_at DESC LIMIT 1) AS last_message
+            "SELECT t.id, t.created_at,
+                    u.username AS other_user
              FROM message_threads t
-             JOIN users u ON
-                (CASE
-                    WHEN t.user1_id = :id1 THEN t.user2_id
-                    ELSE t.user1_id
+             JOIN users u ON 
+                (CASE 
+                    WHEN t.user1_id = :id THEN t.user2_id 
+                    ELSE t.user1_id 
                  END) = u.id
-             WHERE t.user1_id = :id2 OR t.user2_id = :id3
-             ORDER BY COALESCE(t.last_message_at, t.created_at) DESC
+             WHERE t.user1_id = :id OR t.user2_id = :id
+             ORDER BY t.created_at DESC
              LIMIT :limit OFFSET :offset"
         );
 
-        $stmt->bindValue(':id1', $user['id'], PDO::PARAM_INT);
-        $stmt->bindValue(':id2', $user['id'], PDO::PARAM_INT);
-        $stmt->bindValue(':id3', $user['id'], PDO::PARAM_INT);
+        $stmt->bindValue(':id', $user['id'], PDO::PARAM_INT);
         $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
         $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
         $stmt->execute();
@@ -83,10 +74,9 @@ class ThreadController {
             return;
         }
 
-        // Create new thread. This table has no created_at column — its
-        // timestamp column is last_message_at.
+        // Create new thread
         $stmt = $pdo->prepare(
-            "INSERT INTO message_threads (user1_id, user2_id, last_message_at)
+            "INSERT INTO message_threads (user1_id, user2_id, created_at)
              VALUES (?, ?, NOW())"
         );
         $stmt->execute([$user['id'], $other_id]);

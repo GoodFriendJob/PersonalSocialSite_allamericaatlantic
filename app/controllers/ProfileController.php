@@ -12,7 +12,8 @@ class ProfileController {
 
         $stmt = $pdo->prepare(
             "SELECT u.id, u.username, u.email,
-                    p.bio, p.avatar_url
+                    u.bio,
+                    COALESCE(NULLIF(u.profile_pic, ''), NULLIF(p.avatar_url, ''), 'assets/img/default-avatar.svg') AS avatar_url
              FROM users u
              LEFT JOIN profiles p ON p.user_id = u.id
              WHERE u.id = ?"
@@ -46,11 +47,16 @@ class ProfileController {
             $stmt->execute([$username, $user['id']]);
         }
 
-        // Update bio
+        // Keep the users table authoritative because posts, stories, and the
+        // main profile UI all read their avatar and bio from it.
         if ($bio !== null) {
             $stmt = $pdo->prepare(
-                "UPDATE profiles SET bio = ?, updated_at = NOW()
-                 WHERE user_id = ?"
+                "UPDATE users SET bio = ? WHERE id = ?"
+            );
+            $stmt->execute([$bio, $user['id']]);
+
+            $stmt = $pdo->prepare(
+                "UPDATE profiles SET bio = ?, updated_at = NOW() WHERE user_id = ?"
             );
             $stmt->execute([$bio, $user['id']]);
         }
@@ -73,7 +79,7 @@ class ProfileController {
         }
 
         // Get old avatar
-        $stmt = $pdo->prepare("SELECT avatar_url FROM profiles WHERE user_id = ?");
+        $stmt = $pdo->prepare("SELECT profile_pic FROM users WHERE id = ?");
         $stmt->execute([$user['id']]);
         $oldAvatar = $stmt->fetchColumn();
 
@@ -93,7 +99,10 @@ class ProfileController {
         $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
         $filename = 'avatar_' . $user['id'] . '_' . time() . '.' . $ext;
 
-        $uploadDir = Media::dir('avatars');
+        $uploadDir = __DIR__ . '/../public/avatars';
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0755, true);
+        }
 
         $path = $uploadDir . '/' . $filename;
 
@@ -102,23 +111,31 @@ class ProfileController {
             return;
         }
 
-        $avatarUrl = Media::url('avatars', $filename);
+        $avatarUrl = '/app/public/avatars/' . $filename;
 
-        // Delete old avatar file if it exists. Stored urls are relative to the
-        // project root; older rows may still carry a leading slash.
-        if ($oldAvatar) {
-            $oldPath = Media::root() . '/' . ltrim($oldAvatar, '/');
-            if (is_file($oldPath)) {
-                unlink($oldPath);
-            }
+        // Save the same URL to both avatar columns for old and new clients.
+        $pdo->beginTransaction();
+        try {
+            $stmt = $pdo->prepare("UPDATE users SET profile_pic = ? WHERE id = ?");
+            $stmt->execute([$avatarUrl, $user['id']]);
+            $stmt = $pdo->prepare(
+                "UPDATE profiles SET avatar_url = ?, updated_at = NOW() WHERE user_id = ?"
+            );
+            $stmt->execute([$avatarUrl, $user['id']]);
+            $pdo->commit();
+        } catch (Throwable $e) {
+            if ($pdo->inTransaction()) $pdo->rollBack();
+            @unlink($path);
+            Response::error("Failed to save avatar", 500);
+            return;
         }
 
-        // Save new avatar
-        $stmt = $pdo->prepare(
-            "UPDATE profiles SET avatar_url = ?, updated_at = NOW()
-             WHERE user_id = ?"
-        );
-        $stmt->execute([$avatarUrl, $user['id']]);
+        // Remove the previous managed file only after the new database values
+        // have committed successfully.
+        if ($oldAvatar && strpos($oldAvatar, '/app/public/avatars/') === 0) {
+            $oldPath = __DIR__ . '/../public/avatars/' . basename($oldAvatar);
+            if (is_file($oldPath)) @unlink($oldPath);
+        }
 
         ActivityLogger::log($user['id'], 'update_avatar', $user['id'], 'user');
 

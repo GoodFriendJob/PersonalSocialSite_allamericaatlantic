@@ -16,26 +16,13 @@ require_once __DIR__ . '/../controllers/AdminDashboardController.php';
 require_once __DIR__ . '/../controllers/ReportController.php';
 require_once __DIR__ . '/../controllers/StoryController.php';
 require_once __DIR__ . '/../controllers/ProfileController.php';
-require_once __DIR__ . '/../controllers/FriendController.php';
-require_once __DIR__ . '/../controllers/SaveController.php';
-require_once __DIR__ . '/../controllers/ShareController.php';
-require_once __DIR__ . '/../controllers/CategoryController.php';
-require_once __DIR__ . '/../controllers/BootstrapController.php';
-
-/* -------------------------
-   BOOTSTRAP
-   Everything app.php needs on load, in one request. The individual routes
-   below still exist and are used to refresh a single section afterwards.
---------------------------*/
-$router->add('GET',  'bootstrap',     ['BootstrapController', 'index']);
+require_once __DIR__ . '/../controllers/RatingController.php';
 
 /* -------------------------
    AUTH
 --------------------------*/
 $router->add('POST', 'auth/register', ['AuthController', 'register']);
 $router->add('POST', 'auth/login',    ['AuthController', 'login']);
-$router->add('POST', 'auth/logout',   ['AuthController', 'logout']);
-$router->add('GET',  'auth/me',       ['AuthController', 'me']);
 
 /* -------------------------
    STORIES
@@ -45,7 +32,12 @@ $router->add('GET',    'stories',              ['StoryController', 'feed']);
 $router->add('GET',    'stories/me',           ['StoryController', 'myStories']);
 $router->add('POST',   'stories/{id}/view',    ['StoryController', 'view']);
 $router->add('GET',    'stories/{id}/viewers', ['StoryController', 'viewers']);
+$router->add('POST',   'stories/{id}/like',    ['StoryController', 'like']);
+$router->add('DELETE', 'stories/{id}/like',    ['StoryController', 'unlike']);
+$router->add('GET',    'stories/{id}/comments',['StoryController', 'comments']);
+$router->add('POST',   'stories/{id}/comments',['StoryController', 'addComment']);
 $router->add('DELETE', 'stories/{id}',         ['StoryController', 'delete']);
+$router->add('POST',   'stories/{id}/rating',  ['RatingController', 'rateStory']);
 
 /* -------------------------
    REPORTS
@@ -99,47 +91,21 @@ $router->add('GET',  'posts',              ['PostController', 'index']);
 $router->add('GET',  'posts/{id}',         ['PostController', 'show']);
 $router->add('POST', 'posts',              ['PostController', 'create']);
 $router->add('PUT',  'posts/{id}',         ['PostController', 'update']);
+$router->add('DELETE','posts/{id}',         ['PostController', 'delete']);
 
 $router->add('POST', 'posts/{id}/like',    ['LikeController', 'like']);
 $router->add('DELETE','posts/{id}/like',   ['LikeController', 'unlike']);
 $router->add('GET',  'posts/{id}/likes',   ['PostController', 'getLikes']);
+$router->add('POST', 'posts/{id}/save',    ['PostController', 'save']);
+$router->add('DELETE','posts/{id}/save',   ['PostController', 'unsave']);
+$router->add('POST', 'posts/{id}/rating',  ['RatingController', 'ratePost']);
 
 /* COMMENTS */
 $router->add('GET',  'posts/{id}/comments', ['CommentController', 'index']);
 $router->add('POST', 'posts/{id}/comments', ['CommentController', 'addComment']);
 $router->add('POST', 'posts/{postId}/comments/{commentId}/reply', ['CommentController', 'replyToComment']);
 $router->add('DELETE', 'comments/{id}', ['CommentController', 'delete']);
-
-/* -------------------------
-   SAVE / SHARE
---------------------------*/
-$router->add('POST',   'posts/{id}/save',   ['SaveController',  'save']);
-$router->add('DELETE', 'posts/{id}/save',   ['SaveController',  'unsave']);
-$router->add('GET',    'me/saved',          ['SaveController',  'index']);
-
-$router->add('POST',   'posts/{id}/share',  ['ShareController', 'share']);
-$router->add('GET',    'posts/{id}/shares', ['ShareController', 'index']);
-
-/* -------------------------
-   CATEGORIES
---------------------------*/
-$router->add('GET',    'categories',      ['CategoryController', 'index']);
-$router->add('POST',   'categories',      ['CategoryController', 'create']);
-$router->add('DELETE', 'categories/{id}', ['CategoryController', 'delete']);
-
-/* -------------------------
-   FRIENDS
-   Literal paths are registered before the {id} ones so that
-   "friends/search" is never swallowed by a parameter pattern.
---------------------------*/
-$router->add('GET',    'friends/search',        ['FriendController', 'search']);
-$router->add('GET',    'friends/pending',       ['FriendController', 'pending']);
-$router->add('GET',    'friends/sent',          ['FriendController', 'sent']);
-$router->add('GET',    'friends',               ['FriendController', 'index']);
-$router->add('POST',   'friends/{id}/request',  ['FriendController', 'request']);
-$router->add('POST',   'friends/{id}/accept',   ['FriendController', 'accept']);
-$router->add('POST',   'friends/{id}/decline',  ['FriendController', 'decline']);
-$router->add('DELETE', 'friends/{id}',          ['FriendController', 'remove']);
+$router->add('PUT', 'comments/{id}', ['CommentController', 'edit']);
 
 /* -------------------------
    USERS
@@ -147,6 +113,7 @@ $router->add('DELETE', 'friends/{id}',          ['FriendController', 'remove']);
 $router->add('POST',   'users/{id}/follow',  ['FollowController', 'follow']);
 $router->add('DELETE', 'users/{id}/follow',  ['FollowController', 'unfollow']);
 $router->add('GET',    'users/{id}',         ['UserController', 'show']);
+$router->add('POST', 'profiles/{id}/rating', ['RatingController', 'rateProfile']);
 // most specific first
 // MOST SPECIFIC FIRST
 $router->add('POST', 'notifications/{id}/read', ['NotificationController', 'markRead']);

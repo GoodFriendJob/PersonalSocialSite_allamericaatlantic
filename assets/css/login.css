@@ -68,15 +68,3 @@
     color: #0A1F44;
     font-weight: bold;
 }
-
-/* Inline error shown by login.js when the API rejects the credentials. */
-.login-error {
-    background: #fdecea;
-    color: #9b1c1c;
-    border: 1px solid #f5c2c0;
-    border-radius: 6px;
-    padding: 10px 12px;
-    margin: 0 0 12px;
-    font-size: 14px;
-    text-align: center;
-}
