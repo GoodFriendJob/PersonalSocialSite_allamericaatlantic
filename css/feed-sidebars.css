@@ -1,0 +1,57 @@
+/* CSS Document */
+
+/* FEED TABS */
+.general-categories,
+.sports-categories {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.general-tab,
+.sports-tab {
+  padding: 10px 16px;
+  border-radius: 12px;
+  background: #e8ecf3;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  transition: 0.2s ease;
+}
+
+.general-tab.is-active,
+.sports-tab.is-active {
+  background: var(--aa-blue);
+  color: #fff;
+}
+
+/* POSTS */
+.post {
+  padding: 24px;
+  border-radius: var(--aa-radius);
+  background: #fff;
+  box-shadow: var(--aa-shadow);
+}
+
+.post-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.post-media img {
+  width: 100%;
+  border-radius: 12px;
+  margin: 12px 0;
+}
+
+/* FRIENDS SIDEBAR */
+.friends-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.friend {
+  margin-bottom: 12px;
+}

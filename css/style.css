@@ -1,0 +1,184 @@
+/* -------------------------------------------------- */
+/* GLOBAL THEME                                        */
+/* -------------------------------------------------- */
+
+:root {
+  --aa-red: #b30000;
+  --aa-navy: #001f5b;
+  --aa-blue: #003b9b;
+  --aa-light: #f5f7fa;
+  --aa-shadow: 0 8px 24px rgba(0,0,0,0.08);
+  --aa-radius: 16px;
+}
+
+body {
+  font-family: "Space Grotesk", sans-serif;
+  background: var(--aa-light);
+  margin: 0;
+  padding: 0;
+  color: #0a0a0a;
+}
+
+/* -------------------------------------------------- */
+/* HEADER                                              */
+/* -------------------------------------------------- */
+
+.main-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 22px 32px;
+  background: linear-gradient(135deg, var(--aa-navy), var(--aa-red));
+  color: #fff;
+  box-shadow: var(--aa-shadow);
+}
+
+.brand-logo img {
+  width: 58px;
+  height: 58px;
+}
+
+.brand-text {
+  margin-left: 16px;
+}
+
+.brand-title {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 4px 0;
+}
+
+.brand-tagline {
+  font-size: 14px;
+  opacity: 0.85;
+}
+
+/* -------------------------------------------------- */
+/* BUTTONS                                             */
+/* -------------------------------------------------- */
+
+.btn,
+.btn-primary,
+.btn-ghost {
+  padding: 12px 18px;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.25s ease;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--aa-red), var(--aa-navy));
+  color: #fff;
+  border: none;
+}
+
+.btn-primary:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.btn-ghost {
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.25);
+}
+
+.btn-ghost:hover {
+  background: rgba(255,255,255,0.25);
+}
+
+/* -------------------------------------------------- */
+/* MAIN GRID                                           */
+/* -------------------------------------------------- */
+
+.main-body {
+  display: grid;
+  grid-template-columns: 300px 1fr 300px;
+  gap: 24px;
+  padding: 32px;
+}
+
+/* -------------------------------------------------- */
+/* PROFILE SIDEBAR                                     */
+/* -------------------------------------------------- */
+
+.sidebar.profile-card {
+  background: #fff;
+  padding: 24px;
+  border-radius: var(--aa-radius);
+  box-shadow: var(--aa-shadow);
+}
+
+.profile-avatar-ring {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.profile-avatar {
+  width: 90px;
+  height: 90px;
+  background: var(--aa-navy);
+  color: #fff;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 28px;
+  font-weight: 700;
+}
+
+/* -------------------------------------------------- */
+/* FEED COLUMN                                         */
+/* -------------------------------------------------- */
+
+.feed-column {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.card {
+  background: #fff;
+  padding: 24px;
+  border-radius: var(--aa-radius);
+  box-shadow: var(--aa-shadow);
+}
+
+/* -------------------------------------------------- */
+/* FRIENDS SIDEBAR                                     */
+/* -------------------------------------------------- */
+
+.friends-card {
+  background: #fff;
+  padding: 24px;
+  border-radius: var(--aa-radius);
+  box-shadow: var(--aa-shadow);
+}
+
+.friend-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.friend-row:hover {
+  background: #f0f3f8;
+}
+
+/* -------------------------------------------------- */
+/* MOBILE                                              */
+/* -------------------------------------------------- */
+
+@media (max-width: 900px) {
+  .main-body {
+    grid-template-columns: 1fr;
+  }
+}
+/* CSS Document */
+

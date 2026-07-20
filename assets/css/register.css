@@ -1,0 +1,82 @@
+/* CSS Document */
+
+/* Constitution Banner */
+.register-hero {
+    background-image: url('/assets/img/we_the_people.png');
+    background-size: cover;   /* scales width, reduces zoom */
+    background-position: top center;
+    background-repeat: no-repeat;
+    height: 300px;
+    position: relative;
+}
+
+.hero-overlay {
+    background: ;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    text-align: center;
+}
+
+/* Register Section */
+.register-section {
+    background-color: #0A1F44; /* Navy Blue */
+    padding: 60px 0;
+}
+
+select[name="state"] {
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+	border: 2px solid #0A1F44;
+    border-radius: 5px;
+}
+
+
+.register-box {
+    background: white;
+    width: 360px;
+    margin: 0 auto;
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    text-align: center;
+}
+
+.register-box h2 {
+    color: #B22222; /* Sun-burnt red */
+    margin-bottom: 20px;
+}
+
+.register-box input {
+    width: 100%;
+    padding: 12px;
+    margin: 15px 0;
+    border: 2px solid #0A1F44;
+    border-radius: 6px;
+}
+
+.register-box button {
+    width: 100%;
+    padding: 12px;
+    background: #B22222;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.register-box button:hover {
+    background: #8b1a1a;
+}
+
+.login-link {
+    display: block;
+    margin-top: 15px;
+    color: #0A1F44;
+    font-weight: bold;
+}

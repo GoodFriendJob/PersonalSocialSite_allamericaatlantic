@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Universal API Tester</title>
+    <style>
+        body { font-family: Arial; padding: 20px; background: #f5f5f5; transition: 0.3s; }
+        .dark { background: #121212; color: #e0e0e0; }
+        input, select, textarea { width: 100%; padding: 10px; margin: 8px 0; border-radius: 6px; }
+        button { padding: 12px; margin-top: 10px; width: 100%; background: #007bff; color: white; border: none; cursor: pointer; border-radius: 6px; }
+        button:hover { background: #0056b3; }
+        pre { background: #222; color: #0f0; padding: 15px; white-space: pre-wrap; border-radius: 6px; }
+        .container { max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 8px; }
+        .dark .container { background: #1e1e1e; }
+        .row { display: flex; gap: 10px; }
+        .row button { flex: 1; }
+        .toggle { background: #444; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+
+<button class="toggle" onclick="toggleDark()">Toggle Dark Mode</button>
+
+<div class="container">
+    <h2>All America Atlantic — Universal API Tester</h2>
+
+    <div class="row">
+        <button onclick="preset('POST','https://allamericaatlantic.com/app/auth/register','{\"username\":\"test\",\"email\":\"test@example.com\",\"password\":\"123456\"}')">Register</button>
+        <button onclick="preset('POST','https://allamericaatlantic.com/app/auth/login','{\"email\":\"test@example.com\",\"password\":\"123456\"}')">Login</button>
+        <button onclick="preset('GET','https://allamericaatlantic.com/app/me','')">Me</button>
+    </div>
+
+    <label>HTTP Method</label>
+    <select id="method">
+        <option>GET</option>
+        <option>POST</option>
+        <option>PUT</option>
+        <option>DELETE</option>
+    </select>
+
+    <label>Endpoint URL</label>
+    <input id="url" placeholder="https://allamericaatlantic.com/app/auth/login">
+
+    <label>Bearer Token (auto-saved)</label>
+    <input id="token" placeholder="Paste JWT token here">
+
+    <label>JSON Body (for POST/PUT)</label>
+    <textarea id="body" rows="8" placeholder='{"email":"test@example.com","password":"123456"}'></textarea>
+
+    <label>File Upload (optional)</label>
+    <input type="file" id="fileInput">
+
+    <button onclick="sendRequest()">Send Request</button>
+
+    <h3>Response:</h3>
+    <pre id="response"></pre>
+</div>
+
+<script>
+document.getElementById("token").value = localStorage.getItem("aaa_token") || "";
+
+function preset(method, url, body) {
+    document.getElementById("method").value = method;
+    document.getElementById("url").value = url;
+    document.getElementById("body").value = body;
+}
+
+function toggleDark() {
+    document.body.classList.toggle("dark");
+}
+
+async function sendRequest() {
+    const method = document.getElementById("method").value;
+    const url = document.getElementById("url").value;
+    const token = document.getElementById("token").value;
+    const body = document.getElementById("body").value.trim();
+    const file = document.getElementById("fileInput").files[0];
+	
+	console.log("RAW BODY BEFORE SENDING:", body);
+
+     
+    let options = { method: method, headers: {} };
+
+    if (token.trim() !== "") {
+        options.headers["Authorization"] = "Bearer " + token;
+        localStorage.setItem("aaa_token", token);
+    }
+
+    if (file) {
+        let formData = new FormData();
+        formData.append("file", file);
+
+        try {
+            const jsonBody = JSON.parse(body);
+            for (let key in jsonBody) formData.append(key, jsonBody[key]);
+        } catch (e) {}
+
+        options.body = formData;
+    } 
+   else if (method === "POST" || method === "PUT") {
+    options.headers["Content-Type"] = "application/json";
+    options.body = body; // send raw JSON text
+}
+
+
+    try {
+        const res = await fetch(url, options);
+        const text = await res.text();
+
+        try {
+            document.getElementById("response").textContent =
+                JSON.stringify(JSON.parse(text), null, 4);
+        } catch {
+            document.getElementById("response").textContent = text;
+        }
+
+    } catch (err) {
+        document.getElementById("response").textContent = "ERROR:\n" + err;
+    }
+}
+
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,83 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+<HEAD>
+<script src="https://cdn.jsdelivr.net/processing.js/1.4.8/processing.min.js"></script>
+<TITLE>The Golf Page</TITLE>
+<script src="js/project.js"></script>
+<META http-equiv=Content-Type content="text/html; charset=windows-1252">
+<STYLE>
+BODY {
+	FONT-SIZE: 18pt; COLOR: blue; 
+	FONT-FAMILY: Arial, Helvetica, sans-serif; 
+	BACKGROUND-COLOR: rgb(255,255,128)  
+	}
+</STYLE>
+
+<SCRIPT LANGUAGE="text/JavaScript">
+
+     
+var x = new Array[-395, -389, -383, -377, -371, -365, -359, -353, -346, 
+-340, -334, -328, -322, -316, -310, -304, -297, -291, -285, -279, -273, 
+-267, -261, -255, -248, -242, -236, -230, -224, -218, -212, -206, -199, 
+-193, -187, -181, -175, -169, -163, -157, -150, -144, -138, -132, -126, 
+-120, -114, -108, -101, -95, -93, -91, -88, -86, -83, -81, -78, -76, -73, 
+-71, -69, -66, -64, -61, -59, -56, -54, -51, -49, -47, -44, -42, -39, -37, 
+-34, -32, -29, -27, -24, -22, -20, -17, -15, -12, -10, -7, -5, -2, 0];
+
+var y = new Array[-300, -300, -300, -299, -298, -297, -296, -294, -292, 
+-290, -288, -285, -282, -279, -276, -272, -268, -264, -260, -255, -250, 
+-245, -240, -234, -228, -222, -216, -209, -202, -195, -188, -180, -172, 
+-164, -156, -147, -138, -129, -120, -110, -100, -90, -80, -69, -58, -47, 
+-36, -24, -12, 0, -5, -10, -14, -18, -22, -25, -29, -32, -34, -37, -39, 
+-41, -43, -45, -46, -47, -48, -48, -48, -48, -48, -48, -47, -46, -45, -43, 
+-42, -40, -37, -35, -32, -29, -26, -23, -19, -15, -11, -6, 0];
+
+i = 0;   
+   
+
+  function moveObject() { 
+     
+      var c = x + y;
+           if (i <=c-1); {
+           shiftIt("ball",  x[i], y[i]);
+           i = c++;
+           setTimeout("moveObject()", 5); {
+           if (i<y-1); {
+           showIt("Slogan",  x[i], y[i]);
+            if (i <x+y-1); {
+           showIt("Slogan2",  x[i], y[i]);
+		    c = document.getElementById('ball');
+           
+              }
+			  
+}
+       
+    
+
+</script>
+<script type="text/javascript">
+//golf ball
+image(getImage("images/coverbg"), 100,100, 80, 80);
+
+</script>
+
+</HEAD>
+
+<BODY>
+<DIV id="Title" style="BORDER-RIGHT: blue 3px solid; BORDER-TOP: blue 1px solid; PADDING-LEFT: 395px; PADDING-BOTTOM: 0px; BORDER-LEFT: blue 1px solid; PADDING-TOP: 260px; BORDER-BOTTOM: blue 3px solid; BACKGROUND-COLOR: rgb(0,255,0)">THE 
+G<SPAN  id="Ball" style="position:relative: "><IMG SRC="images/Ball.gif" width="17" height="17" border=0></SPAN>LF PAGE 
+</DIV>
+<DIV  id='Slogan' style"="FONT-WEIGHT: bold; color:black; font-style: italic; FONT-FAMILY: Times New Roman, Times, serif; position:absolute(left:120; top:100); visibility:hidden; z-index:2">Your 
+Online Source of Golf Equipment </DIV>
+<DIV id='Slogan2' style="FONT-WEIGHT: bold; color:white; font-style: italic; FONT-FAMILY: Times New Roman, Times, serif; position:absolute(left:120; top:100); z-index:1">Your 
+Online Source of Golf Equipment 
+</DIV>
+<p><button type="button" onclick="myFunction()">Try it</button></p>
+
+<p id="demo">this is a paragraph</p>
+
+
+
+<script src="js/project.js"></script>
+</BODY>
+</HTML>

@@ -1,0 +1,416 @@
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<script src="https://cdn.jsdelivr.net/processing.js/1.4.8/processing.min.js"></script>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<title>FootBall Squares</title>
+<style type="text/css">
+* {
+  margin: 0;
+  padding: 0;
+  transition: 0.1s; }
+
+body {
+  font-family: 'Roboto Condensed', Helvetica, sans-serif;
+  text-align: left;
+  font-size: 18px;
+  color: #303030; }
+
+.container {
+  max-width: 450px;
+  margin: 0 auto; }
+
+h3 {
+  color: #C3FF00;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em; }
+
+h4 {
+  text-transform: uppercase; }
+
+.disabled h3 {
+  color: #535353;
+  cursor: not-allowed; }
+
+.button-active {
+  color: #C3FF00;
+  background-color: #535353; }
+
+nav {
+  background-color: #303030;
+  color: #EFEFEF; }
+  nav .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center; }
+    nav .container object {
+      width: 4.5em;
+      padding: 1.2em 0.5em; }
+    nav .container .login-button,
+    nav .container .menu-button {
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 1em 1.25em;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+      cursor: pointer; }
+
+.nav-menu {
+  background-color: #535353;
+  color: #EFEFEF;
+  display: flex;
+  justify-content: center; }
+  .nav-menu .container {
+    padding: 1.5em;
+    display: flex; }
+    .nav-menu .container ul {
+      list-style: none; }
+      .nav-menu .container ul li {
+        padding: 0.25em 2em; }
+        .nav-menu .container ul li:first-child {
+          text-transform: uppercase;
+          color: #C3FF00;
+          letter-spacing: 0.05em; }
+
+.hide {
+  display: none; }
+
+.login-form {
+  background-color: #535353;
+  padding: 1em 0 0;
+  color: #EFEFEF;
+  display: none; 
+  }
+  .login-form .container {
+    padding: 0 0.5em; }
+  .login-form h4 {
+    font-weight: 400; }
+  .login-form input {
+    width: calc(100% - 1em);
+    border: none;
+    height: 2em;
+    margin: 0.5em 0;
+    font-size: 1em;
+    padding: 0 0.5em; }
+  .login-form .sign-in-button {
+    background-color: #303030;
+    color: #C3FF00;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    text-align: center;
+    width: 100%;
+    height: 2.5em;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    cursor: pointer; }
+
+.product-card {
+  margin: 1em 0; }
+  .product-card .dark-sole-original,
+  .product-card .sole-air-ii,
+  .product-card .tidal-x {
+    background-size: 28em 15em;
+    background-position: center;
+    height: 14em;
+    transition: 0.2s; }
+ 
+  .product-card .product-details {
+    margin-top: -5px;
+    background-color: #EFEFEF;
+    display: flex;
+    justify-content: space-between; }
+    .product-card .product-details h4,
+    .product-card .product-details p {
+      padding: 0.7em 1.25em; }
+    .product-card .product-details div {
+      display: flex; }
+    .product-card .product-details .more-details-button {
+      background-color: #535353;
+      padding: 0.75em 1.25em;
+      cursor: pointer;
+      width: 1em;
+      transition: 0.1s; }
+      .product-card .product-details .more-details-button img {
+        position: relative;
+        left: 0.1em; }
+      .product-card .product-details .more-details-button .rotate {
+        transition: 0.1s;
+        transform: rotate(90deg); }
+  .product-card .shoe-details {
+    display: none;
+    background-color: #535353;
+    color: #EFEFEF; }
+    .product-card .shoe-details .active {
+      background-color: #C3FF00;
+      color: #303030; }
+  .product-card .size-chart,
+  .product-card p {
+    padding: 1em 1.25em; }
+    .product-card .size-chart ul,
+    .product-card p ul {
+      list-style: none;
+      display: flex;
+      justify-content: space-around;
+      margin-top: 1em; }
+      .product-card .size-chart ul li,
+      .product-card p ul li {
+        padding: 0.5em;
+        background-color: #303030;
+        width: 100%;
+        text-align: center;
+        margin-right: 2px; }
+  .product-card .buy-now-button {
+    background-color: #303030;
+    text-align: center;
+    padding: 0.75em;
+    cursor: pointer; }
+
+
+  
+
+footer {
+  color: #EFEFEF;
+  background-color: #303030;
+  margin-top: 2em;
+  padding: 2em 0.5em; }
+  footer .container {
+    display: flex;
+    justify-content: space-between; }
+    footer .container object {
+      width: 4.5em; }
+
+
+.style1 {
+	font-size: 36px;
+	font-weight: bold;
+	color: #990000;
+	font-family: "Times New Roman", Times, serif;
+}
+.style2 {
+font-family: "Times New Roman", Times, serif;
+}
+body {
+	background-color: #666666;
+}
+.style9 {
+padding: 30;
+color: #000000;
+ }
+.style10 {font-size: 45px}
+.style12 {
+	font-family: "Times New Roman", Times, serif;
+	font-size: 55px;
+	color: #993300;
+}
+td:hover {
+background-color:#ff55ff;
+
+}
+th {
+
+background-color:#99FF00;
+
+}
+
+</style>
+</head>
+
+<body>
+  <!-- Navigation -->
+  <nav>
+    <div class='container'>
+      <object type='image/svg+xml' data='http://allamericaatlantic.com/images/svg/arrow.svg'></object>
+      <div>
+        <span class='menu-button'>Menu</span>
+        <span class='login-button'>Login</span>
+      </div>
+    </div>
+  </nav>
+  <!-- Login Form -->
+  <div class='login-form'>
+    <div class='container'>
+      <form>
+        <h4>Username</h4>
+        <input class='username' />
+        <h4>Password</h4>
+        <input type='password' />
+        <input class='sign-in-button' type='submit' value='Sign In' />
+      </form>
+    </div>
+  </div>
+<div align="center"><span class="style1">SUPER BOWL FootBall Square</span>
+  <table width="745" height="550" border="4" cellpadding="2" cellspacing="5" summary="FootBall Team">
+    <caption>&nbsp;
+    </caption>
+    <tr>
+      <th width="50" bgcolor="#CC0000" scope="col">N F L</th>
+     
+    <th name="patriots" colspan="11" bgcolor="#00FFCC" scope="col"  height="50"><span class="style10">Patriots</span></th>
+    </tr>
+   
+  <tr>
+      <th id="ram" name="larams" rowspan="11" scope="row"><span class="style12">R<br>
+      A <br> M <br> S</span></th>
+      <th>N F L</th>
+      <td><h3 align="center" class="style9"><span class="style2">0</span></h3></td>
+      <td><h3 align="center" class="style9"><span class="style2">1</span></h3></td>
+      <td><h3 align="center" class="style9"><span class="style2">2</span></h3></td>
+      <td><h3 align="center" class="style9"><span class="style2">3</span></h3></td>
+      <td><h3 align="center" class="style9"><span class="style2">4</span></h3></td>
+      <td><h3 align="center" class="style9"><span class="style2">5</span></h3></td>
+      <td><h3 align="center" class="style9"><span class="style2">6</span></h3></td>
+      <td><h3 align="center" class="style9"><span class="style2">7</span></h3></td>
+      <td><h3 align="center" class="style9"><span class="style2">8</span></h3></td>
+      <td><h3 align="center" class="style9"><span class="style2">9</span></h3></td>
+    </tr>
+    <tr>
+      <td scope="row"><h3 align="center" class="style9"><span class="style2">0</span></h3></th>
+      <td width="50">&nbsp;</td>
+      <td width="50">&nbsp;</td>
+      <td width="50">&nbsp;</td>
+      <td width="50">&nbsp;</td>
+      <td width="50">&nbsp;</td>
+      <td width="50">&nbsp;</td>
+      <td width="50">&nbsp;</td>
+      <td width="50">&nbsp;</td>
+      <td width="50">&nbsp;</td>
+      <td width="50">&nbsp;</td>
+    </tr>
+    <tr>
+      
+    <td height="50"><h3 align="center" class="style9"><span class="style2">1</span></h3></td>
+	  <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+    </tr>
+    <tr>
+      
+    <td height="50"><h3 align="center" class="style9"><span class="style2">2</span></h3></td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+	  <td>&nbsp;</td>
+    </tr>
+    <tr>
+      
+    <td height="50"><h3 align="center" class="style9"><span class="style2">3</span></h3></td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+	  <td>&nbsp;</td>
+    </tr>
+    <tr>
+      
+    <td height="50"><h3 align="center" class="style9"><span class="style2">4</span></h3></td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+	  <td>&nbsp;</td>
+    </tr>
+    <tr>
+     
+    <td height="50"><h3 align="center" class="style9"><span class="style2">5</span></h3></td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+	  <td>&nbsp;</td>
+    </tr>
+    <tr>
+      
+    <td height="50"><h3 align="center" class="style9"><span class="style2">6</span></h3></td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+	  <td>&nbsp;</td>
+    </tr>
+    <tr>
+     
+    <td height="50"><h3 align="center" class="style9"><span class="style2">7</span></h3></td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+	  <td>&nbsp;</td>
+    </tr>
+    <tr>
+      
+    <td height="50"><h3 align="center" class="style9"><span class="style2">8</span></h3></td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+	  <td>&nbsp;</td>
+    </tr>
+    <tr>
+      
+    <td height="50"><h3 align="center" class="style9"><span class="style2">9</span></h3></td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+	  <td>&nbsp;</td>
+    </tr>
+    </table>
+</div>
+ <script src='js/squares.js.js'></script> 
+</body>
+</html>

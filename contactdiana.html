@@ -1,0 +1,185 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Diana's Hair Styling WebSite</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<style type="text/css">
+
+input {
+
+background-color:#009900;
+
+}
+.button{
+font-size:24px;
+}
+
+ .block {
+  display: block;
+   border-radius: 25px;
+   border: 2px solid #73AD21;
+  width: 100%;
+  border: none;
+  background-color: #009900;
+  color: white;
+  font-size: 26px;
+  cursor: pointer;
+  text-align: center;
+}
+
+.block:hover {
+  background-color: #0FEEC6;
+  color: red;
+   border: 2px solid #b22505;
+}
+<!--
+/* Add a black background color to the top navigation */
+.topnav {
+   
+    overflow: hidden;
+}
+
+/* Style the links inside the navigation bar */
+.topnav a {
+    float: left;
+    color: #f2f2f2;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+    font-size: 17px;
+}
+
+/* Change the color of links on hover */
+.topnav a:hover {
+    background-color:#00CC00;
+    color: black;
+}
+
+/* Add a color to the active/current link */
+.topnav a.active {
+    background-color: #4CAF50;
+    color: white;
+}
+.style1 {
+	font-size: xx-large;
+	font-weight: bold;
+	color: #33FFFF;
+}
+.style2 {font-size: medium}
+body {
+	background-color:#000000;
+}
+
+-->
+.style1 {
+	font-size: 14px;
+	font-weight: bold;
+	color:#33FFFF;
+}
+.style2 {
+	color:#000000;
+	font-weight:bold;
+	font-size: 16px;
+	background-color:#FF9900;
+}
+a:visited {
+	color: #FFCC00;
+}
+a:active {
+	color: #FFFF00;
+}
+
+.style5 {
+    color: #FF0000;
+	font-size:36px;
+}
+fieldset {
+max-width:400px;
+font-size:16px;
+min-width:400px;
+background-color:#9933CC;
+
+}
+.style10 {color: #00CC99; font-size: 24px; }
+.style12 {
+	color: #00CCCC;
+	font-weight: bold;
+}
+</style>
+</head>
+
+<body>
+
+<table align="center">
+     <tr>
+	    <td align="center"><div class="topnav" >
+  <a class="active" href="index.html">Home</a>
+  <a href="news.html">News</a>
+  <a href="contact.html">Contact</a>
+  <a href="about.php">About</a>
+   <a href="myBooks.htm">Books</a>
+    <a href="gifts.html">Gifts</a>
+	 <a href="downloads.html">DownLoads</a>
+	 
+</div></td>
+	</tr>
+</table>
+<div align="center" class="style1" id="title"><span class="style5"> </span></div>
+
+  
+<div align="center">
+<form id="contact" action="/forms/insertdiana.php" method="post">
+    
+    <h4 align="center" class="style2"><strong>Contact us for all your questions</strong></h4><br><table width="732" height="304" border="4" cellpadding="2" cellspacing="2">
+  <caption>
+  Diana Vizaro
+  </caption>
+  <tr>
+    <td width="199" height="292"><img src="images/diana/diana.png" width="199" height="282"></td>
+    <td width="348"><p align="center" class="style10">All American Hair Style</p>
+	<p align="center" class="style10"> By Diana Vizaro	</p>
+	</td>
+    <td width="151"><img src="images/diana/scissors.png" width="151" height="186"></td>
+  </tr>
+</table>
+
+	<table width="376">
+	   <tr>
+	       <td width="150"><div align="left"><span class="style1">First Name:&nbsp;</span> </td><td width="214"> <input name="pp_fname" type="text" class="style2" tabindex="1" required></td>
+	   </tr>
+	    <tr>
+	       <td><div align="left"><span class="style1">Last Name:&nbsp;</span> </td><td> <input name="pp_lname"  type="text" class="style2" tabindex='2' required></td>
+	   </tr>
+	    <tr>
+	       <td><div align="left"><span class="style1">Phone Number:&nbsp;</span> </td><td>  <input name="pp_phone"  type="text" class="style2" tabindex='3'></td>
+	   </tr>
+	   <tr>
+	       <td><div align="left"><span class="style1">Email:&nbsp;</span> </td><td>  <input  type="email" name="pp_email" class="style2" tabindex='4' required></td>
+	   </tr>
+	    <tr>
+	       <td><div align="left"><span class="style1">Appointment Time :&nbsp;</span> </td>
+	       <td>  <input  type="text" name="pp_city" class="style2" tabindex='4' ></td>
+	   </tr>
+	    <tr>
+	       <td><div align="left"><span class="style1">Appointment Day :&nbsp;</span> </td>
+	       <td>  <input  type="text" name="pp_state" class="style2" tabindex='4' ></td>
+	   </tr>
+	    <tr>
+	       <td colspan="2"><div align="center"><span class="style12"> What Kind of Service is Requested: </span></div></td>
+      </tr>
+		   <tr>
+	       <td colspan="2">  <textarea name="pp_message" cols="70" rows="8" tabindex='5'  type="text"></textarea></td>
+	   </tr>
+	   <tr>
+	      <td colspan="2"> <input class="block" name="submit" type="submit" id="submit"> </input></td>
+	   </tr>
+	</table>
+	
+
+    </div>
+    <p align="center" class="copyright">Designed by <a href="https://allamericaatlantic.com" target="_blank" title="Colorlib">Charles Fletcher</a></p>
+</form>
+</div>
+</body>
+</html>

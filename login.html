@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="assets/css/login.css">
+    <link rel="icon" type="image/png" href="/assets/icons/aaa_fav_icon1.png" sizes="16x16">
+    <link rel="icon" type="image/png" href="/assets/icons/aaa_fav_icon2.png" sizes="32x32">
+    <link href="https://googleapis.com" rel="stylesheet">
+    <style type="text/css">
+        body { 
+            background-color: #CC0033; 
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+</head>
+<body>
+    <section class="login-hero">
+        <div class="hero-overlay">
+            <h1>All American Network</h1>
+            <p>Connect across sports, trade, and business.</p>
+        </div>
+    </section>
+    
+    <section class="login-section">
+        <div class="login-box">
+            <h2>Time to Become an</h2>
+            <h1>" ALL AMERICAN "</h1>
+            <h2>Login</h2>
+            
+            <form id="loginForm">
+                <!-- Added modern id, autocomplete attributes to fix browser blocks -->
+                <input type="text" id="email" name="email" placeholder="Email or Username" autocomplete="username" required>
+                <input type="password" id="password" name="password" placeholder="Password" autocomplete="current-password" required>
+                
+                <button type="submit">Login</button>
+                <a href="#" class="forgot">Forgot Password?</a>
+                <a href="register.html" class="register-link">Create an Account</a>
+            </form>
+        </div>
+    </section>
+
+    <!-- Ensure login.js matches this layout perfectly -->
+    <script src="login.js"></script>
+</body>
+</html>

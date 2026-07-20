@@ -1,0 +1,219 @@
+/* CSS Document */
+
+/* -------------------------------------------------- */
+/* GLOBAL                                              */
+/* -------------------------------------------------- */
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: "Space Grotesk", sans-serif;
+  background: #f5f7fa;
+  color: #0a0a0a;
+}
+
+/* -------------------------------------------------- */
+/* HERO SECTION                                        */
+/* -------------------------------------------------- */
+
+.hero {
+  background: linear-gradient(135deg, #001f5b, #b30000);
+  color: #fff;
+  padding: 120px 20px;
+  text-align: center;
+}
+
+.hero-title {
+  font-size: 56px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.hero-tagline {
+  font-size: 22px;
+  opacity: 0.9;
+  margin-bottom: 40px;
+}
+
+.hero-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
+.btn-primary {
+  padding: 16px 28px;
+  border-radius: 14px;
+  background: #fff;
+  color: #001f5b;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: 0.25s ease;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  opacity: 0.9;
+}
+
+.btn-outline {
+  padding: 16px 28px;
+  border-radius: 14px;
+  background: transparent;
+  border: 2px solid #fff;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.25s ease;
+}
+
+.btn-outline:hover {
+  background: rgba(255,255,255,0.15);
+}
+
+/* -------------------------------------------------- */
+/* THREE-PILLAR SECTION                                */
+/* -------------------------------------------------- */
+
+.pillars {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 28px;
+  padding: 60px 40px;
+  max-width: 1200px;
+  margin: auto;
+}
+
+.pillar {
+  background: #fff;
+  padding: 32px;
+  border-radius: 18px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+  text-align: center;
+}
+
+.pillar-title {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.pillar-text {
+  font-size: 16px;
+  opacity: 0.8;
+}
+.site-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 32px;
+  background: #ffffff;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+}
+
+.nav-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.nav-logo {
+  width: 48px;
+  height: 48px;
+}
+
+.nav-title {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.nav-links {
+  display: flex;
+  gap: 20px;
+}
+
+.nav-link {
+  font-weight: 600;
+  color: #001f5b;
+  text-decoration: none;
+}
+
+.nav-link:hover {
+  opacity: 0.7;
+}
+
+.nav-cta {
+  padding: 10px 18px;
+  background: linear-gradient(135deg, #b30000, #001f5b);
+  color: #fff;
+  border-radius: 10px;
+}
+
+/* -------------------------------------------------- */
+/* FOOTER                                              */
+/* -------------------------------------------------- */
+
+.footer {
+  text-align: center;
+  padding: 40px 20px;
+  background: #001f5b;
+  color: #fff;
+  margin-top: 60px;
+  font-size: 14px;
+}
+
+/* DARK MODE */
+@media (prefers-color-scheme: dark) {
+  body {
+    background: #0b0f19;
+    color: #f0f3ff;
+  }
+
+  .hero {
+    background: linear-gradient(135deg, #000d2a, #5a0000);
+  }
+
+  .pillar {
+    background: #111827;
+    color: #e5e7eb;
+  }
+
+  .footer {
+    background: #000d2a;
+  }
+}
+
+/* MOBILE FIRST */
+@media (max-width: 700px) {
+  .nav-links {
+    display: none;
+  }
+
+  .hero-title {
+    font-size: 38px;
+  }
+
+  .pillars {
+    grid-template-columns: 1fr;
+    padding: 20px;
+  }
+
+  .hero-buttons {
+    flex-direction: column;
+  }
+}
+
+/* -------------------------------------------------- */
+/* MOBILE                                              */
+/* -------------------------------------------------- */
+
+@media (max-width: 900px) {
+  .pillars {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-title {
+    font-size: 42px;
+  }
+}

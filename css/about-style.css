@@ -1,0 +1,34 @@
+/* CSS Document */
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: "Space Grotesk", sans-serif;
+  background: #f5f7fa;
+}
+
+.about-hero {
+  padding: 80px 20px;
+  text-align: center;
+  background: linear-gradient(135deg, #001f5b, #003b9b);
+  color: #fff;
+}
+
+.about-title {
+  font-size: 42px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.about-tagline {
+  font-size: 18px;
+  opacity: 0.9;
+}
+
+.about-content {
+  max-width: 900px;
+  margin: 40px auto;
+  padding: 0 20px;
+  font-size: 18px;
+  line-height: 1.6;
+}
