@@ -25,7 +25,7 @@ if ($__app_base === "." || $__app_base === "/") {
 <header class="topbar">
 
     <div class="topbar-left">
-        <img src="assets/icons/aaa_logo_dark.png" alt="AAA" class="mini-logo">
+        <img src="assets/icons/logo_dark.png" alt="AAA" class="mini-logo">
     </div>
 
     <div class="topbar-center">
@@ -38,14 +38,13 @@ if ($__app_base === "." || $__app_base === "/") {
             <span class="slogan">Be best of the best in every category</span>
         </div>
 
+    </div>
+    
+    <div class="topbar-right">
         <div class="topbar-actions">
             <button class="action-btn small">Daily Goal</button>
             <button class="action-btn">New Highlight Reel of the Day</button>
         </div>
-    </div>
-
-    <div class="topbar-right">
-        <img src="assets/icons/aaa_logo_dark.png" alt="AAA logo" class="main-logo">
     </div>
 
 </header>
@@ -387,10 +386,28 @@ if ($__app_base === "." || $__app_base === "/") {
         <span class="online-count" id="onlineCount">0 Online</span>
     </div>
     
-    <!-- Added missing dynamic list container -->
+    <!-- Online friends -->
     <ul id="friendsList" class="friends-list">
         <li class="loading-friends">Loading network...</li>
     </ul>
+
+    <!-- Requests other members sent me: accept or decline -->
+    <section id="friend-requests-block" class="network-block" hidden>
+        <h4 class="network-block-title">
+            Friend requests <span id="friend-requests-count" class="network-count">0</span>
+        </h4>
+        <ul id="friend-requests-list" class="request-list"></ul>
+    </section>
+
+    <!-- Requests I sent that are still waiting: cancel -->
+    <section id="friend-sent-block" class="network-block" hidden>
+        <h4 class="network-block-title">
+            Requests sent <span id="friend-sent-count" class="network-count">0</span>
+        </h4>
+        <ul id="friend-sent-list" class="request-list"></ul>
+    </section>
+
+    <p id="friend-network-status" class="network-status" role="status" aria-live="polite"></p>
 
   <div class="add-friend-card">
     <h4>Add to your circle</h4>

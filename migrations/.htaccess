@@ -1,0 +1,10 @@
+# These files sit in the webroot so migrate.php can glob them, which also makes
+# them fetchable over HTTP. Nothing here is secret, but the schema is not worth
+# publishing. Covers both Apache 2.4 and 2.2 since the host version is unknown.
+<IfModule mod_authz_core.c>
+    Require all denied
+</IfModule>
+<IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+</IfModule>

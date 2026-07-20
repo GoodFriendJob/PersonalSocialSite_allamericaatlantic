@@ -76,17 +76,13 @@ body {
     object-fit: contain;
 }
 
-
-
-
-
 .slogan {
     font-size: 12px;
     opacity: 0.85;
 }
 
 .topbar-actions {
-    display: flex;
+    display: inline-flex;
     justify-content: center;
     gap: 10px;
 }
@@ -100,6 +96,7 @@ body {
     font-weight: 600;
     background: #ff6a2a;
     color: #000;
+    min-width:120px;
 }
 
 .action-btn.small {

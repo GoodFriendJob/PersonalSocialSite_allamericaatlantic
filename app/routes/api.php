@@ -17,6 +17,7 @@ require_once __DIR__ . '/../controllers/ReportController.php';
 require_once __DIR__ . '/../controllers/StoryController.php';
 require_once __DIR__ . '/../controllers/ProfileController.php';
 require_once __DIR__ . '/../controllers/RatingController.php';
+require_once __DIR__ . '/../controllers/FriendController.php';
 
 /* -------------------------
    AUTH
@@ -120,6 +121,24 @@ $router->add('POST', 'notifications/{id}/read', ['NotificationController', 'mark
 $router->add('POST', 'notifications/read-all', ['NotificationController', 'markAllRead']);
 
 // THEN the general route
+
+/* -------------------------
+   FRIENDS
+
+   Literal segments before '{id}': the router matches in registration order
+   and {id} only ever compiles to \d+, but keeping search/pending/sent/network
+   first means a future looser placeholder cannot shadow them.
+--------------------------*/
+$router->add('GET',    'friends',                ['FriendController', 'index']);
+$router->add('GET',    'friends/search',         ['FriendController', 'search']);
+$router->add('GET',    'friends/pending',        ['FriendController', 'pending']);
+$router->add('GET',    'friends/sent',           ['FriendController', 'sent']);
+$router->add('GET',    'friends/network',        ['FriendController', 'network']);
+$router->add('POST',   'friends/{id}/request',   ['FriendController', 'request']);
+$router->add('POST',   'friends/{id}/accept',    ['FriendController', 'accept']);
+$router->add('POST',   'friends/{id}/decline',   ['FriendController', 'decline']);
+// Unfriend, and also how the sender cancels a request they made.
+$router->add('DELETE', 'friends/{id}',           ['FriendController', 'remove']);
 
 /* -------------------------
    NOTIFICATIONS

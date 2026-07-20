@@ -81,19 +81,23 @@ class FriendController
     {
         global $pdo;
 
+        // Online friends first, so the sidebar reads top-down by availability.
+        $isOnline = Presence::sqlIsOnline('u');
+
         $stmt = $pdo->prepare("
-            SELECT u.id, u.username, u.first_name, u.last_name, u.profile_pic, u.sport, u.position
+            SELECT u.id, u.username, u.first_name, u.last_name, u.profile_pic, u.sport, u.position,
+                   $isOnline AS is_online
               FROM friends f
               JOIN users u
                 ON u.id = CASE WHEN f.user_id = :me THEN f.friend_id ELSE f.user_id END
              WHERE (f.user_id = :me2 OR f.friend_id = :me3)
                AND f.status = 'accepted'
                AND u.banned = 0
-             ORDER BY u.username
+             ORDER BY is_online DESC, u.username
         ");
         $stmt->execute(['me' => $meId, 'me2' => $meId, 'me3' => $meId]);
 
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return array_map([self::class, 'shapeUser'], $stmt->fetchAll(PDO::FETCH_ASSOC));
     }
 
     public static function index($params)
@@ -120,7 +124,7 @@ class FriendController
         ");
         $stmt->execute([$meId]);
 
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return array_map([self::class, 'shapeUser'], $stmt->fetchAll(PDO::FETCH_ASSOC));
     }
 
     public static function pending($params)
@@ -147,7 +151,7 @@ class FriendController
         ");
         $stmt->execute([$meId]);
 
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return array_map([self::class, 'shapeUser'], $stmt->fetchAll(PDO::FETCH_ASSOC));
     }
 
     public static function sent($params)
@@ -155,6 +159,30 @@ class FriendController
         $me = AuthMiddleware::requireAuth();
 
         Response::success(['requests' => self::fetchSent($me['id'])]);
+    }
+
+    /* ------------------------------------------------------------------
+       GET friends/network — everything the sidebar renders, in one call
+
+       The sidebar needs three lists at once. Fetching them as three requests
+       is not just three connections: PHP holds an exclusive lock on the
+       session file for the length of a request, so they queue rather than
+       overlap. One endpoint, one lock, one round trip.
+    ------------------------------------------------------------------ */
+    public static function network($params)
+    {
+        $me = AuthMiddleware::requireAuth();
+
+        $friends = self::fetchFriends($me['id']);
+
+        Response::success([
+            'friends'      => $friends,
+            'requests'     => self::fetchPending($me['id']),
+            'sent'         => self::fetchSent($me['id']),
+            'online_count' => count(array_filter($friends, function ($friend) {
+                return $friend['is_online'];
+            })),
+        ]);
     }
 
     /* ------------------------------------------------------------------
@@ -290,6 +318,26 @@ class FriendController
     }
 
     /* ------------------------------------------------------------------ */
+
+    /**
+     * PDO hands back every column as a string. The sidebar branches on
+     * is_online and keys rows by id, and "0" is truthy in JavaScript, so the
+     * types have to be settled here rather than in the template.
+     */
+    private static function shapeUser(array $row): array
+    {
+        $row['id'] = (int)$row['id'];
+        $row['is_online'] = !empty($row['is_online']);
+        $row['profile_pic'] = ($row['profile_pic'] ?? '') !== ''
+            ? $row['profile_pic']
+            : 'assets/img/default-avatar.svg';
+        $row['display_name'] = trim(implode(' ', array_filter([
+            $row['first_name'] ?? '',
+            $row['last_name'] ?? '',
+        ]))) ?: ($row['username'] ?? 'Member');
+
+        return $row;
+    }
 
     private static function describeRelationship(?string $status, $requesterId, int $meId): string
     {

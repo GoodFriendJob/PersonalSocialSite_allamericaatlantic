@@ -15,6 +15,10 @@
  * live server lets anyone with the token alter your database.
  */
 
+// config() for the token gate, $pdo for the run. db.php currently hardcodes
+// its credentials and no longer pulls in config.php, so require it explicitly
+// rather than relying on db.php to have done it.
+require_once __DIR__ . '/app/config/config.php';
 require_once __DIR__ . '/app/config/db.php';
 
 // Imports can take a while on shared hosting.

@@ -28,11 +28,9 @@ body {
     gap: 8px;
 }
 
-
 .topbar-pill-buttons {
     display: inline-flex;
     gap: 10px;
-    margin-bottom: 6px;
 }
 .topbar-right {
     display: flex;
@@ -44,7 +42,6 @@ body {
     justify-content: flex-start;
     align-items: center;
 }
-
 
 .pill-btn {
     border-radius: 999px;
@@ -77,10 +74,6 @@ body {
     object-fit: contain;
 }
 
-
-
-
-
 .slogan {
     font-size: 12px;
     opacity: 0.85;
@@ -88,6 +81,7 @@ body {
 
 .topbar-actions {
     display: flex;
+    flex-direction: column;
     justify-content: center;
     gap: 10px;
 }
@@ -1268,6 +1262,189 @@ a.profile-handle:hover {
     color: #000;
     font-weight: 600;
     cursor: pointer;
+}
+
+/* ---- Friend requests: incoming (accept/decline) and sent (cancel) ---- */
+.network-block {
+    margin: 0 0 16px;
+    padding: 12px;
+    background: #151c3a;
+    border-radius: 10px;
+}
+
+.network-block[hidden] {
+    display: none;
+}
+
+.network-block-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 10px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.network-count {
+    min-width: 20px;
+    padding: 1px 7px;
+    border-radius: 999px;
+    background: #ff6a2a;
+    color: #000;
+    font-size: 11px;
+    font-weight: 700;
+    text-align: center;
+}
+
+.request-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.request-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 0;
+    border-top: 1px solid #232c53;
+}
+
+.request-row:first-child {
+    border-top: none;
+}
+
+.request-row .avatar-small {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+/* min-width:0 lets the long-name ellipsis actually kick in inside the flex row */
+.request-info {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.request-name,
+.request-handle {
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.request-name {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.request-handle {
+    margin-top: 2px;
+    font-size: 11px;
+    opacity: 0.75;
+}
+
+.request-actions {
+    display: flex;
+    flex: 0 0 auto;
+    gap: 6px;
+}
+
+.request-accept,
+.request-decline,
+.request-cancel {
+    padding: 5px 10px;
+    border: none;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.request-accept {
+    background: #3aff7a;
+    color: #04220f;
+}
+
+.request-decline,
+.request-cancel {
+    background: transparent;
+    border: 1px solid #3c4677;
+    color: #cdd5f2;
+}
+
+.request-accept:disabled,
+.request-decline:disabled,
+.request-cancel:disabled {
+    opacity: 0.55;
+    cursor: default;
+}
+
+.network-status {
+    margin: 0 0 12px;
+    font-size: 12px;
+    color: #9fe8b8;
+    min-height: 1em;
+}
+
+.network-status.is-error {
+    color: #ff8f7a;
+}
+
+/* Search results sit on the dark sidebar, so override the light default set
+   inline in app.php on #search-results-dropdown. */
+.search-results-dropdown {
+    max-height: 260px;
+    overflow-y: auto;
+    background: #0f1530 !important;
+    border: 1px solid #232c53;
+}
+
+.search-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-bottom: 1px solid #232c53;
+}
+
+.search-row:last-child {
+    border-bottom: none;
+}
+
+.search-name {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 12px;
+}
+
+.search-add {
+    flex: 0 0 auto;
+    padding: 4px 10px;
+    border: none;
+    border-radius: 4px;
+    background: #ff6a2a;
+    color: #000;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.search-add:disabled {
+    background: #3c4677;
+    color: #cdd5f2;
+    cursor: default;
+}
+
+.search-empty {
+    padding: 8px 10px;
+    font-size: 12px;
+    opacity: 0.7;
 }
 
 /* Pending Requests Title */

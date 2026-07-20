@@ -1,6 +1,7 @@
 <?php
 
 require_once __DIR__ . '/JWT.php';
+require_once __DIR__ . '/Presence.php';
 
 class AuthMiddleware
 {
@@ -49,6 +50,11 @@ class AuthMiddleware
             Response::error('Account banned', 403);
             exit;
         }
+
+        // Every authenticated call doubles as an "I'm here" signal, so the
+        // Network Friends sidebar can show who is active without a dedicated
+        // polling channel.
+        Presence::touch((int)$dbUser['id']);
 
         return [
             'id' => (int)$dbUser['id'],
