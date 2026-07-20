@@ -126,6 +126,7 @@ $router->add('DELETE', 'categories/{id}', ['CategoryController', 'delete']);
 --------------------------*/
 $router->add('GET',    'friends/search',        ['FriendController', 'search']);
 $router->add('GET',    'friends/pending',       ['FriendController', 'pending']);
+$router->add('GET',    'friends/sent',          ['FriendController', 'sent']);
 $router->add('GET',    'friends',               ['FriendController', 'index']);
 $router->add('POST',   'friends/{id}/request',  ['FriendController', 'request']);
 $router->add('POST',   'friends/{id}/accept',   ['FriendController', 'accept']);

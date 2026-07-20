@@ -15,11 +15,29 @@
   const addBtn = document.getElementById("add-friend-submit-btn");
   const countEl = document.getElementById("onlineCount");
   const requestsList = document.getElementById("friend-requests");
+  const sentList = document.getElementById("friend-sent");
 
   if (!friendsList) return;
 
-  loadFriends();
-  loadRequests();
+  let friendCount = 0;
+  let sentCount = 0;
+
+  /** Header shows both totals: accepted friends and outgoing requests. */
+  function updateHeaderCount() {
+    if (!countEl) return;
+
+    countEl.textContent =
+      friendCount + (friendCount === 1 ? " friend" : " friends") +
+      (sentCount ? " · " + sentCount + " requested" : "");
+  }
+
+  refreshAll();
+
+  function refreshAll() {
+    loadFriends();
+    loadSent();
+    loadRequests();
+  }
 
   /* ===================== FRIEND LIST ===================== */
   async function loadFriends() {
@@ -32,7 +50,8 @@
   }
 
   function renderFriends(friends) {
-    if (countEl) countEl.textContent = friends.length + " friends";
+    friendCount = friends.length;
+    updateHeaderCount();
 
     if (!friends.length) {
       friendsList.innerHTML = '<li class="loading-friends">No friends yet — search for someone below.</li>';
@@ -66,6 +85,68 @@
     });
   }
 
+  /* ============= OUTGOING REQUESTS (I asked them) ========= */
+  async function loadSent() {
+    if (!sentList) return;
+
+    try {
+      const data = await Api.get("friends/sent");
+      const requests = data.requests || [];
+
+      sentCount = requests.length;
+      updateHeaderCount();
+
+      if (!requests.length) {
+        sentList.innerHTML = "";
+        return;
+      }
+
+      sentList.innerHTML =
+        '<h4 class="requests-title">Friend requested <span class="group-count">' +
+          requests.length + "</span></h4>" +
+        requests
+          .map(function (r) {
+            const name = [r.first_name, r.last_name].filter(Boolean).join(" ") || r.username;
+            const avatar = r.profile_pic
+              ? '<img class="friend-avatar" src="' + Api.escape(Api.assetUrl(r.profile_pic)) + '" alt="">'
+              : '<div class="avatar-small">' + Api.escape(r.username.slice(0, 2).toUpperCase()) + "</div>";
+
+            return (
+              '<div class="request-row" data-sent="' + r.id + '">' + avatar +
+                '<div class="friend-info">' +
+                  '<p class="friend-name">' + Api.escape(name) + "</p>" +
+                  '<p class="friend-role">@' + Api.escape(r.username) + " · pending</p>" +
+                "</div>" +
+                '<button class="request-cancel" data-cancel="' + r.id + '" type="button">Cancel request</button>' +
+              "</div>"
+            );
+          })
+          .join("");
+
+      sentList.querySelectorAll("[data-cancel]").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          cancelRequest(btn.dataset.cancel, btn);
+        });
+      });
+    } catch (err) {
+      sentList.innerHTML = "";
+    }
+  }
+
+  async function cancelRequest(userId, btn) {
+    btn.disabled = true;
+    btn.textContent = "Cancelling…";
+
+    try {
+      await Api.del("friends/" + userId);
+      refreshAll();
+    } catch (err) {
+      alert("Could not cancel the request: " + err.message);
+      btn.disabled = false;
+      btn.textContent = "Cancel request";
+    }
+  }
+
   /* =================== INCOMING REQUESTS ================== */
   async function loadRequests() {
     if (!requestsList) return;
@@ -80,7 +161,8 @@
       }
 
       requestsList.innerHTML =
-        '<h4 class="requests-title">Friend requests</h4>' +
+        '<h4 class="requests-title">Requests received <span class="group-count">' +
+          requests.length + "</span></h4>" +
         requests
           .map(function (r) {
             const name = [r.first_name, r.last_name].filter(Boolean).join(" ") || r.username;
@@ -112,8 +194,7 @@
   async function respond(userId, action) {
     try {
       await Api.post("friends/" + userId + "/" + action);
-      loadRequests();
-      loadFriends();
+      refreshAll();
     } catch (err) {
       alert("Could not " + action + " the request: " + err.message);
     }
@@ -201,8 +282,9 @@
       const res = await Api.post("friends/" + userId + "/request");
       btn.outerHTML =
         '<span class="search-status">' + (res.friendship === "accepted" ? "Friends" : "Requested") + "</span>";
-      loadFriends();
-      loadRequests();
+
+      // refreshAll so the new request shows up under "Friend requested" too.
+      refreshAll();
     } catch (err) {
       alert(err.message);
       btn.disabled = false;

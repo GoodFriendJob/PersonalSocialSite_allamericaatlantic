@@ -90,6 +90,7 @@
           t.classList.toggle("active", t === btn);
         });
 
+        syncComposerCategory();
         loadFeed();
       });
     });
@@ -106,6 +107,35 @@
           return '<option value="' + c.id + '">' + Api.escape(c.name) + "</option>";
         })
         .join("");
+
+    syncComposerCategory();
+  }
+
+  /**
+   * Keeps the composer's category locked to whichever tab is selected, so a
+   * post written while browsing Football is filed under Football.
+   *
+   * The select is disabled while a tab is active — a disabled control submits
+   * nothing, so the submit handler falls back to activeCategory.
+   */
+  function syncComposerCategory() {
+    const select = document.getElementById("composer-category");
+    const hint = document.getElementById("composer-category-hint");
+    if (!select) return;
+
+    if (activeCategory === null) {
+      select.disabled = false;
+      select.value = "";
+      if (hint) hint.textContent = "";
+      return;
+    }
+
+    select.value = String(activeCategory);
+    select.disabled = true;
+
+    if (hint) {
+      hint.textContent = "Posting to " + categoryName(activeCategory);
+    }
   }
 
   /* =====================================================================
@@ -292,7 +322,12 @@
       fd.append("content", content);
       fd.append("title", (document.getElementById("composer-title") || {}).value || "");
       fd.append("visibility", (document.getElementById("composer-visibility") || {}).value || "public");
-      fd.append("category_id", (document.getElementById("composer-category") || {}).value || "");
+      // When a tab is active the select is locked to it, so prefer that.
+      const categorySelect = document.getElementById("composer-category");
+      const categoryId = activeCategory !== null
+        ? String(activeCategory)
+        : (categorySelect ? categorySelect.value : "");
+      fd.append("category_id", categoryId);
 
       if (fileInput) {
         Array.prototype.forEach.call(fileInput.files, function (file) {
@@ -310,6 +345,9 @@
         composer.reset();
         if (preview) preview.innerHTML = "";
         showStatus(status, "", false);
+
+        // composer.reset() clears the locked category, so restore it.
+        syncComposerCategory();
 
         // Jump back to page 1 so the new post is visible.
         currentPage = 1;

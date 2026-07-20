@@ -116,6 +116,27 @@ class FriendController
     }
 
     /* ------------------------------------------------------------------
+       GET friends/sent — requests I have sent that are still pending
+    ------------------------------------------------------------------ */
+    public static function sent($params)
+    {
+        global $pdo;
+
+        $me = AuthMiddleware::requireAuth();
+
+        $stmt = $pdo->prepare("
+            SELECT u.id, u.username, u.first_name, u.last_name, u.profile_pic, u.sport
+              FROM friends f
+              JOIN users u ON u.id = f.friend_id
+             WHERE f.user_id = ? AND f.status = 'pending'
+             ORDER BY f.id DESC
+        ");
+        $stmt->execute([$me['id']]);
+
+        Response::success(['requests' => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
+    }
+
+    /* ------------------------------------------------------------------
        POST friends/{id}/request
     ------------------------------------------------------------------ */
     public static function request($params)

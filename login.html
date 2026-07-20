@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
     <link rel="stylesheet" href="assets/css/login.css">
-    <link rel="icon" type="image/png" href="/assets/icons/aaa_fav_icon1.png" sizes="16x16">
-    <link rel="icon" type="image/png" href="/assets/icons/aaa_fav_icon2.png" sizes="32x32">
+    <link rel="icon" type="image/png" href="/assets/icons/fav_icon1.png" sizes="16x16">
+    <link rel="icon" type="image/png" href="/assets/icons/fav_icon2.png" sizes="32x32">
     <link href="https://googleapis.com" rel="stylesheet">
     <style type="text/css">
         body { 
@@ -31,6 +31,7 @@
             <h2>Login</h2>
             
             <form id="loginForm">
+                <p id="message" class="login-error" style="display:none;"></p>
                 <!-- Added modern id, autocomplete attributes to fix browser blocks -->
                 <input type="text" id="email" name="email" placeholder="Email or Username" autocomplete="username" required>
                 <input type="password" id="password" name="password" placeholder="Password" autocomplete="current-password" required>

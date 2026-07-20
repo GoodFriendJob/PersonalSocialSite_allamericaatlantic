@@ -8,6 +8,7 @@ body {
     font-family: "Space Grotesk", sans-serif;
     background: #050814;
     color: #fff;
+    font-size:12px;
 }
 
 /* TOPBAR */
@@ -32,7 +33,6 @@ body {
 .topbar-pill-buttons {
     display: inline-flex;
     gap: 10px;
-    margin-bottom: 6px;
 }
 .topbar-right {
     display: flex;
@@ -44,7 +44,6 @@ body {
     justify-content: flex-start;
     align-items: center;
 }
-
 
 .pill-btn {
     border-radius: 999px;
@@ -435,7 +434,8 @@ a.profile-handle:hover {
 }
 
 .stories-panel {
-    display: none; /* we can toggle with JS later */
+    /* Was display:none while the panel was a placeholder. It now holds the
+       live story bar rendered by assets/js/feed.js, so it must be visible. */
     background: #0f152e;
     border-radius: 12px;
     padding: 16px;
@@ -561,33 +561,6 @@ a.profile-handle:hover {
     display: flex;
     flex-wrap: wrap;
 }
-
-.tab {
-    padding: 8px 16px;
-    border-radius: 999px;
-    background: #0a1a3a;          /* NAVY BLUE */
-    border: 1px solid #1f294a;
-    color: #d4a017;               /* BURNT YELLOW */
-    font-size: 13px;
-    cursor: pointer;
-    transition: 0.2s ease;
-}
-
-/* HOVER - NEON GREEN */
-.tab:hover {
-    background: #00ff66;          /* NEON GREEN */
-    color: #000;
-    border-color: #00ff66;
-}
-
-/* ACTIVE TAB - NAVY + NEON GREEN BORDER */
-.tab.active {
-    background: #0a1a3a;          /* NAVY */
-    color: #d4a017;               /* BURNT YELLOW */
-    border-color: #00ff66;        /* NEON GREEN BORDER */
-    box-shadow: 0 0 10px rgba(0, 255, 102, 0.6);
-}
-
 
 /* RIGHT SIDEBAR */
 .sidebar-right {

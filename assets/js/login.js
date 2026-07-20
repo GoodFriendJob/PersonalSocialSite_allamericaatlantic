@@ -1,42 +1,55 @@
-document.getElementById("loginForm").addEventListener("submit", async function(e) { 
-    e.preventDefault(); 
+document.getElementById("loginForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
 
-    // 1. Gather form input values manually to build a clean JSON object
-    // (Make sure the element IDs 'email' and 'password' match your HTML inputs)
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
-    const data = { email, password };
+    const messageElement = document.getElementById("message");
+
+    function showError(text) {
+        if (messageElement) {
+            messageElement.textContent = text;
+            messageElement.style.display = "block";
+        } else {
+            alert(text);
+        }
+    }
+
+    if (messageElement) {
+        messageElement.style.display = "none";
+    }
 
     try {
-        // 2. Send data to your PHP route as JSON
-        const response = await fetch("login.php", { // Update path if your route is in /app/routes/
-            method: "POST", 
+        // All API calls go through the JSON front controller, not a standalone
+        // login.php — that file has never existed and the 404 HTML it returned
+        // is what made every login attempt look like a network failure.
+        const response = await fetch("app/index.php?route=auth/login", {
+            method: "POST",
+            credentials: "same-origin", // keep the PHP session cookie
             headers: {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify(data) 
+            body: JSON.stringify({ email, password })
         });
 
-        const result = await response.json();
+        const text = await response.text();
+        let result;
+        try {
+            result = text ? JSON.parse(text) : {};
+        } catch (parseError) {
+            // A PHP warning or HTML error page leaking into the body.
+            console.error("Non-JSON login response:", text.slice(0, 300));
+            showError("Server error. Please try again.");
+            return;
+        }
 
-        // 3. Handle the response safely
-        if (response.ok || result.success) { 
-            // Redirect to UI page 
-            window.location.href = "app.php"; 
-        } else { 
-            // Check if the HTML 'message' element exists before using it
-            const messageElement = document.getElementById("message");
-            const errorMessage = result.message || result.error || "Invalid username or password.";
+        if (response.ok && result.success) {
+            window.location.href = "app.php";
+            return;
+        }
 
-            if (messageElement) {
-                messageElement.innerText = errorMessage;
-            } else {
-                // Pop-up fallback if the HTML element is missing from the page
-                alert(errorMessage); 
-            }
-        } 
+        showError(result.error || result.message || "Invalid username or password.");
     } catch (error) {
-        alert("An error occurred during login. Please try again.");
+        showError("An error occurred during login. Please try again.");
         console.error(error);
     }
 });

@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/app/core/Session.php';
+require_once __DIR__ . '/app/core/Asset.php';
 Session::start();
 require __DIR__ . "/app/config/db.php";
 
@@ -10,7 +11,7 @@ if ($u === "") {
     http_response_code(400);
     ?>
     <!DOCTYPE html>
-    <html lang="en"><head><meta charset="UTF-8"><title>Profile</title><link rel="stylesheet" href="assets/css/app.css"></head>
+    <html lang="en"><head><meta charset="UTF-8"><title>Profile</title><link rel="stylesheet" href="<?= asset('assets/css/app.css') ?>"></head>
     <body style="padding:24px;font-family:system-ui;background:#050814;color:#fff;">
     <p>Missing username. Open a profile with <code>?u=username</code>.</p>
     <p><a href="app.php" style="color:#5eb4ff">Return to app</a></p>
@@ -44,7 +45,7 @@ if (!$profile) {
     http_response_code(404);
     ?>
     <!DOCTYPE html>
-    <html lang="en"><head><meta charset="UTF-8"><title>Not found</title><link rel="stylesheet" href="assets/css/app.css"></head>
+    <html lang="en"><head><meta charset="UTF-8"><title>Not found</title><link rel="stylesheet" href="<?= asset('assets/css/app.css') ?>"></head>
     <body style="padding:24px;font-family:system-ui;background:#050814;color:#fff;">
     <p>No user found for <strong><?= htmlspecialchars('@' . $u, ENT_QUOTES, 'UTF-8') ?></strong>.</p>
     <p><a href="app.php" style="color:#5eb4ff">Return to app</a></p>
@@ -88,14 +89,14 @@ $sv = (int) ($profile["num_saved_posts"] ?? 0);
 <head>
     <meta charset="UTF-8">
     <title><?= $h($name) ?> — Profile</title>
-    <link rel="stylesheet" href="assets/css/app.css">
+    <link rel="stylesheet" href="<?= asset('assets/css/app.css') ?>">
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
 
 <header class="topbar">
     <div class="topbar-left">
-        <a href="app.php"><img src="assets/icons/aaa_logo_dark.png" alt="AAA" class="mini-logo"></a>
+        <a href="app.php"><img src="<?= asset('assets/icons/logo_dark.png') ?>" alt="AAA" class="mini-logo"></a>
     </div>
     <div class="topbar-center">
         <div class="topbar-slogan-row">

@@ -7,7 +7,7 @@
   --feed-radius: 12px;
   --feed-border: #e3e6ec;
   --feed-muted: #6b7280;
-  --feed-accent: #003b9b;
+  --feed-accent: #ff6a2a;
   --feed-danger: #b91c1c;
 }
 
@@ -604,29 +604,32 @@
 
 .sports-tabs .tab {
   flex: 0 0 auto;
-  padding: 7px 14px;
+  padding: 5px 15px;
+  background:none;
   border: 1px solid var(--feed-border);
+  color:var(--feed-border);
   border-radius: 999px;
   cursor: pointer;
   font: inherit;
-  font-size: 13px;
+  font-size: 12px;
   white-space: nowrap;
 }
 
 .sports-tabs .tab:hover {
-  background: #f3f4f6;
+  color: var(--feed-accent);
+  border-color: var(--feed-accent);
 }
 
 .sports-tabs .tab.active {
   background: var(--feed-accent);
-  border-color: var(--feed-accent);
-  color: #fff;
-  font-weight: 600;
+  border-color: var(--feed-border);
+  color: var(--feed-border);
 }
 
 .tab-count {
-  opacity: 0.7;
   font-size: 11px;
+  font-weight:bold;
+  color: var(--feed-border);
 }
 
 .post-tag {
@@ -678,4 +681,81 @@
 
 .pager-total {
   opacity: 0.75;
+}
+
+/* Composer category pinned to the selected tab */
+.composer-category-hint:empty {
+  display: none;
+}
+
+.composer-category-hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--feed-accent);
+  font-weight: 600;
+}
+
+.composer-visibility:disabled {
+  background: #eef2ff;
+  color: var(--feed-accent);
+  border-color: var(--feed-accent);
+  font-weight: 600;
+  opacity: 1;          /* keep it legible rather than greyed out */
+  cursor: not-allowed;
+}
+
+/* ------------------ SIDEBAR REQUEST GROUPS ------------------- */
+.friend-group:not(:empty) {
+  border-top: 1px solid var(--feed-border);
+  margin-top: 12px;
+  padding-top: 10px;
+}
+
+.requests-title {
+  margin: 0 0 8px;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--feed-muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.group-count {
+  background: var(--feed-accent);
+  color: #fff;
+  border-radius: 999px;
+  padding: 1px 7px;
+  font-size: 11px;
+  letter-spacing: 0;
+}
+
+.request-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  font-size: 13px;
+}
+
+.request-cancel {
+  border: 1px solid var(--feed-border);
+  background: #fff;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  color: var(--feed-danger);
+}
+
+.request-cancel:hover:not(:disabled) {
+  background: #fef2f2;
+  border-color: var(--feed-danger);
+}
+
+.request-cancel:disabled {
+  opacity: 0.6;
+  cursor: wait;
 }
