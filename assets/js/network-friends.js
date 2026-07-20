@@ -31,8 +31,24 @@
       (sentCount ? " · " + sentCount + " requested" : "");
   }
 
-  refreshAll();
+  /**
+   * Initial paint comes from the shared bootstrap request that feed.js also
+   * awaits — three calls on load become zero extra round trips. If it fails
+   * (expired session, network), fall back to fetching each section directly so
+   * the sidebar still has a chance to render.
+   */
+  Api.bootstrap().then(
+    function (boot) {
+      renderFriends(boot.friends || []);
+      renderSent(boot.friend_sent || []);
+      renderRequests(boot.friend_requests || []);
+    },
+    function () {
+      refreshAll();
+    }
+  );
 
+  /** Refetches every section. Used after accepting/declining/adding. */
   function refreshAll() {
     loadFriends();
     loadSent();
@@ -91,17 +107,25 @@
 
     try {
       const data = await Api.get("friends/sent");
-      const requests = data.requests || [];
+      renderSent(data.requests || []);
+    } catch (err) {
+      sentList.innerHTML = "";
+    }
+  }
 
-      sentCount = requests.length;
-      updateHeaderCount();
+  /** Split out from loadSent so the bootstrap payload can render directly. */
+  function renderSent(requests) {
+    if (!sentList) return;
 
-      if (!requests.length) {
-        sentList.innerHTML = "";
-        return;
-      }
+    sentCount = requests.length;
+    updateHeaderCount();
 
-      sentList.innerHTML =
+    if (!requests.length) {
+      sentList.innerHTML = "";
+      return;
+    }
+
+    sentList.innerHTML =
         '<h4 class="requests-title">Friend requested <span class="group-count">' +
           requests.length + "</span></h4>" +
         requests
@@ -123,14 +147,11 @@
           })
           .join("");
 
-      sentList.querySelectorAll("[data-cancel]").forEach(function (btn) {
-        btn.addEventListener("click", function () {
-          cancelRequest(btn.dataset.cancel, btn);
-        });
+    sentList.querySelectorAll("[data-cancel]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        cancelRequest(btn.dataset.cancel, btn);
       });
-    } catch (err) {
-      sentList.innerHTML = "";
-    }
+    });
   }
 
   async function cancelRequest(userId, btn) {
@@ -153,14 +174,22 @@
 
     try {
       const data = await Api.get("friends/pending");
-      const requests = data.requests || [];
+      renderRequests(data.requests || []);
+    } catch (err) {
+      requestsList.innerHTML = "";
+    }
+  }
 
-      if (!requests.length) {
-        requestsList.innerHTML = "";
-        return;
-      }
+  /** Split out from loadRequests so the bootstrap payload can render directly. */
+  function renderRequests(requests) {
+    if (!requestsList) return;
 
-      requestsList.innerHTML =
+    if (!requests.length) {
+      requestsList.innerHTML = "";
+      return;
+    }
+
+    requestsList.innerHTML =
         '<h4 class="requests-title">Requests received <span class="group-count">' +
           requests.length + "</span></h4>" +
         requests
@@ -176,19 +205,16 @@
           })
           .join("");
 
-      requestsList.querySelectorAll("[data-accept]").forEach(function (btn) {
-        btn.addEventListener("click", function () {
-          respond(btn.dataset.accept, "accept");
-        });
+    requestsList.querySelectorAll("[data-accept]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        respond(btn.dataset.accept, "accept");
       });
-      requestsList.querySelectorAll("[data-decline]").forEach(function (btn) {
-        btn.addEventListener("click", function () {
-          respond(btn.dataset.decline, "decline");
-        });
+    });
+    requestsList.querySelectorAll("[data-decline]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        respond(btn.dataset.decline, "decline");
       });
-    } catch (err) {
-      requestsList.innerHTML = "";
-    }
+    });
   }
 
   async function respond(userId, action) {

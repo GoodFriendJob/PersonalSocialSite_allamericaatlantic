@@ -20,7 +20,7 @@ return [
         'host'      => 'netsol-smtp-oxcs.hostingplatform.com',
         'port'      => 587,
         'username'  => 'admin@allamericaatlantic.com',
-        'password'  => 'YOUR_NEW_SMTP_PASSWORD',
+        'password'  => 'DianaCharles8626$',
         'from_addr' => 'admin@allamericaatlantic.com',
         'from_name' => 'All America Atlantic',
     ],

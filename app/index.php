@@ -26,7 +26,10 @@ ini_set('display_startup_errors', 0);
 
 header('Content-Type: application/json; charset=utf-8');
 
-Session::start();
+// Read-only by default: the lock is released immediately so the browser's
+// concurrent API calls do not serialize. Endpoints that write to the session
+// (auth/login, auth/logout) re-open it through Session::start().
+Session::startReadOnly();
 
 // Turn a fatal into a JSON 500 instead of a blank page or an HTML error dump.
 register_shutdown_function(function () {

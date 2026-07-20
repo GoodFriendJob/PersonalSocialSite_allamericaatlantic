@@ -9,8 +9,13 @@
 
 class CategoryController
 {
-    /* GET categories */
-    public static function index($params)
+    /**
+     * The category list as data.
+     *
+     * Split out from index() so BootstrapController can fold it into the
+     * single page-load response without duplicating this query.
+     */
+    public static function fetchAll(): array
     {
         global $pdo;
 
@@ -22,13 +27,17 @@ class CategoryController
              ORDER BY c.name
         ");
 
-        $categories = array_map(function ($row) {
+        return array_map(function ($row) {
             $row['id']         = (int)$row['id'];
             $row['post_count'] = (int)$row['post_count'];
             return $row;
         }, $stmt->fetchAll(PDO::FETCH_ASSOC));
+    }
 
-        Response::success(['categories' => $categories]);
+    /* GET categories */
+    public static function index($params)
+    {
+        Response::success(['categories' => self::fetchAll()]);
     }
 
     /* POST categories — admin only */

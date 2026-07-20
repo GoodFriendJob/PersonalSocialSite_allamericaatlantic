@@ -22,6 +22,16 @@ class PostController {
        LIST POSTS (WITH MEDIA)
     -------------------------- */
    public static function index($params) {
+       Response::success(self::fetchIndex());
+   }
+
+   /**
+    * The paginated post feed as data, in the same shape index() returned.
+    *
+    * Split out so BootstrapController can fold the first page of the feed into
+    * the single page-load response.
+    */
+   public static function fetchIndex(): array {
     global $pdo;
 
     list($page, $limit, $offset) = Pagination::getPageLimit();
@@ -85,29 +95,47 @@ class PostController {
     }
     unset($p);
 
-    /* Load images + videos for each post */
-    foreach ($posts as &$post) {
+    /* Load images + videos for the whole page in two queries.
+       This used to run two queries per post inside a loop — 41 queries for a
+       20-post page instead of the 2 it takes to fetch them all at once. */
+    if ($posts) {
+        $ids   = array_column($posts, 'id');
+        $slots = implode(',', array_fill(0, count($ids), '?'));
 
-        // Images
-        $stmt2 = $pdo->prepare(
-            "SELECT image_url, thumbnail_url
-             FROM post_images
-             WHERE post_id = ?"
+        $imgStmt = $pdo->prepare(
+            "SELECT post_id, image_url, thumbnail_url FROM post_images WHERE post_id IN ($slots)"
         );
-        $stmt2->execute([$post['id']]);
-        $post['images'] = $stmt2->fetchAll(PDO::FETCH_ASSOC);
+        $imgStmt->execute($ids);
 
-        // Videos
-        $stmt3 = $pdo->prepare(
-            "SELECT video_url, thumbnail_url
-             FROM post_videos
-             WHERE post_id = ?"
+        $vidStmt = $pdo->prepare(
+            "SELECT post_id, video_url, thumbnail_url FROM post_videos WHERE post_id IN ($slots)"
         );
-        $stmt3->execute([$post['id']]);
-        $post['videos'] = $stmt3->fetchAll(PDO::FETCH_ASSOC);
+        $vidStmt->execute($ids);
+
+        // Bucket by post_id, dropping the join column from the payload so the
+        // response shape stays exactly what the frontend already expects.
+        $imagesByPost = [];
+        foreach ($imgStmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $pid = $row['post_id'];
+            unset($row['post_id']);
+            $imagesByPost[$pid][] = $row;
+        }
+
+        $videosByPost = [];
+        foreach ($vidStmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $pid = $row['post_id'];
+            unset($row['post_id']);
+            $videosByPost[$pid][] = $row;
+        }
+
+        foreach ($posts as &$post) {
+            $post['images'] = $imagesByPost[$post['id']] ?? [];
+            $post['videos'] = $videosByPost[$post['id']] ?? [];
+        }
+        unset($post);
     }
 
-    Response::success([
+    return [
         'page'        => $page,
         'limit'       => $limit,
         'total'       => $total,
@@ -115,7 +143,7 @@ class PostController {
         'has_more'    => ($offset + count($posts)) < $total,
         'category_id' => $categoryId,
         'posts'       => $posts
-    ]);
+    ];
 }
 
     /* -------------------------

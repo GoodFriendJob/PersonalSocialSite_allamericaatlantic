@@ -14,7 +14,10 @@ class AuthMiddleware
     {
         global $pdo;
 
-        Session::start();
+        // Read-only: re-opening the session here would re-acquire the file
+        // lock the front controller just released and serialize every
+        // authenticated request again.
+        Session::startReadOnly();
 
         $userId = Session::userId();
         if ($userId === null) {

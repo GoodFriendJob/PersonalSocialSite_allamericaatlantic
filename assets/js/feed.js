@@ -30,20 +30,30 @@
   ===================================================================== */
   init();
 
+  /**
+   * One request for the whole page.
+   *
+   * This used to be four calls, two of them sequential: auth/me, then
+   * categories, then stories and the feed. Everything now arrives in a single
+   * bootstrap response and is handed to the same render paths, so the section
+   * loaders below still work unchanged when they refetch after an action.
+   */
   async function init() {
+    let boot;
+
     try {
-      const me = await Api.get("auth/me");
-      currentUser = me.user;
+      boot = await Api.bootstrap();
     } catch (err) {
       // Session expired between page render and this call.
       window.location.href = "login.html";
       return;
     }
 
-    await loadCategories();
+    currentUser = boot.user;
 
-    loadStories();
-    loadFeed();
+    loadCategories(boot.categories);
+    loadStories(boot.stories);
+    loadFeed(boot.feed);
     wireComposer();
   }
 
@@ -52,12 +62,17 @@
      The sport tabs used to be static HTML that filtered nothing. They are
      now rendered from the API and drive the feed's category_id filter.
   ===================================================================== */
-  async function loadCategories() {
-    try {
-      const data = await Api.get("categories");
-      categories = data.categories || [];
-    } catch (err) {
-      categories = [];
+  /** @param {Array} [preloaded] categories from the bootstrap response */
+  async function loadCategories(preloaded) {
+    if (preloaded) {
+      categories = preloaded;
+    } else {
+      try {
+        const data = await Api.get("categories");
+        categories = data.categories || [];
+      } catch (err) {
+        categories = [];
+      }
     }
 
     renderTabs();
@@ -141,8 +156,14 @@
   /* =====================================================================
      STORIES
   ===================================================================== */
-  async function loadStories() {
+  /** @param {Array} [preloaded] story groups from the bootstrap response */
+  async function loadStories(preloaded) {
     if (!storyBar) return;
+
+    if (preloaded) {
+      renderStories(preloaded);
+      return;
+    }
 
     try {
       const data = await Api.get("stories");
@@ -371,15 +392,19 @@
   /* =====================================================================
      FEED
   ===================================================================== */
-  async function loadFeed() {
-    feedList.innerHTML = '<p class="feed-loading">Loading posts…</p>';
+  /** @param {Object} [preloaded] the feed payload from the bootstrap response */
+  async function loadFeed(preloaded) {
+    // Skip the loading flash when the data is already in hand.
+    if (!preloaded) {
+      feedList.innerHTML = '<p class="feed-loading">Loading posts…</p>';
+    }
     if (pagerEl) pagerEl.innerHTML = "";
 
     const query = { page: currentPage, limit: PAGE_SIZE };
     if (activeCategory !== null) query.category_id = activeCategory;
 
     try {
-      const data = await Api.get("posts", query);
+      const data = preloaded || (await Api.get("posts", query));
       const posts = data.posts || [];
 
       if (!posts.length) {

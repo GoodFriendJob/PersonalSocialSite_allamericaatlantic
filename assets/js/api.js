@@ -81,9 +81,29 @@
     }
   }
 
+  /**
+   * The single page-load request.
+   *
+   * feed.js and network-friends.js both need data from it but load
+   * independently, so the promise is memoized: whichever runs first issues the
+   * request and the other awaits the same result. Calling it twice does not
+   * mean two round trips.
+   */
+  let bootstrapPromise = null;
+
+  function bootstrap(force) {
+    // force: re-fetch after something changed the underlying data (e.g. saving
+    // the profile), so callers do not replay a stale cached payload.
+    if (force || !bootstrapPromise) {
+      bootstrapPromise = request("bootstrap", { method: "GET" });
+    }
+    return bootstrapPromise;
+  }
+
   global.Api = {
     assetUrl: assetUrl,
     error: ApiError,
+    bootstrap: bootstrap,
     get: (route, query) => request(route, { method: "GET", query: query }),
     post: (route, body) => request(route, { method: "POST", body: body }),
     put: (route, body) => request(route, { method: "PUT", body: body }),

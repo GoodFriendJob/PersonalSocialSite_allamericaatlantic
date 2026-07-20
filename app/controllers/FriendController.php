@@ -73,11 +73,13 @@ class FriendController
     /* ------------------------------------------------------------------
        GET friends  — accepted friends
     ------------------------------------------------------------------ */
-    public static function index($params)
+    /**
+     * Accepted friends as data. Split out from index() so the bootstrap
+     * endpoint can reuse it — see BootstrapController.
+     */
+    public static function fetchFriends(int $meId): array
     {
         global $pdo;
-
-        $me = AuthMiddleware::requireAuth();
 
         $stmt = $pdo->prepare("
             SELECT u.id, u.username, u.first_name, u.last_name, u.profile_pic, u.sport, u.position
@@ -89,19 +91,25 @@ class FriendController
                AND u.banned = 0
              ORDER BY u.username
         ");
-        $stmt->execute(['me' => $me['id'], 'me2' => $me['id'], 'me3' => $me['id']]);
+        $stmt->execute(['me' => $meId, 'me2' => $meId, 'me3' => $meId]);
 
-        Response::success(['friends' => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public static function index($params)
+    {
+        $me = AuthMiddleware::requireAuth();
+
+        Response::success(['friends' => self::fetchFriends($me['id'])]);
     }
 
     /* ------------------------------------------------------------------
        GET friends/pending — incoming requests awaiting my response
     ------------------------------------------------------------------ */
-    public static function pending($params)
+    /** Incoming pending requests as data. Reused by BootstrapController. */
+    public static function fetchPending(int $meId): array
     {
         global $pdo;
-
-        $me = AuthMiddleware::requireAuth();
 
         $stmt = $pdo->prepare("
             SELECT u.id, u.username, u.first_name, u.last_name, u.profile_pic
@@ -110,19 +118,25 @@ class FriendController
              WHERE f.friend_id = ? AND f.status = 'pending'
              ORDER BY f.id DESC
         ");
-        $stmt->execute([$me['id']]);
+        $stmt->execute([$meId]);
 
-        Response::success(['requests' => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public static function pending($params)
+    {
+        $me = AuthMiddleware::requireAuth();
+
+        Response::success(['requests' => self::fetchPending($me['id'])]);
     }
 
     /* ------------------------------------------------------------------
        GET friends/sent — requests I have sent that are still pending
     ------------------------------------------------------------------ */
-    public static function sent($params)
+    /** Outgoing pending requests as data. Reused by BootstrapController. */
+    public static function fetchSent(int $meId): array
     {
         global $pdo;
-
-        $me = AuthMiddleware::requireAuth();
 
         $stmt = $pdo->prepare("
             SELECT u.id, u.username, u.first_name, u.last_name, u.profile_pic, u.sport
@@ -131,9 +145,16 @@ class FriendController
              WHERE f.user_id = ? AND f.status = 'pending'
              ORDER BY f.id DESC
         ");
-        $stmt->execute([$me['id']]);
+        $stmt->execute([$meId]);
 
-        Response::success(['requests' => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public static function sent($params)
+    {
+        $me = AuthMiddleware::requireAuth();
+
+        Response::success(['requests' => self::fetchSent($me['id'])]);
     }
 
     /* ------------------------------------------------------------------

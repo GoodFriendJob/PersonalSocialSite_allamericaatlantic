@@ -151,9 +151,18 @@ public static function create($params) {
     /* -------------------------
        STORY FEED (GROUPED + SEEN)
     -------------------------- */
-    public static function feed($params) {
+    /**
+     * Active stories grouped by author, flagged seen/unseen for one viewer.
+     *
+     * Split out from feed() so BootstrapController can reuse it.
+     *
+     * The seen lookup used to run one query per story inside a loop. That is
+     * fine with a handful of stories and pathological with a busy feed, so the
+     * whole set is now fetched in a single IN() query and matched in PHP.
+     */
+    public static function fetchFeed(int $viewerId): array
+    {
         global $pdo;
-        $user = AuthMiddleware::requireAuth();
 
         $stmt = $pdo->prepare(
             "SELECT s.id, s.user_id, u.username, s.media_url, s.media_type, s.thumbnail_url, s.created_at
@@ -165,21 +174,25 @@ public static function create($params) {
         $stmt->execute();
         $stories = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        // seen / unseen
-        $seenStmt = $pdo->prepare(
-            "SELECT COUNT(*) FROM story_views WHERE story_id = ? AND viewer_id = ?"
-        );
-
-        foreach ($stories as &$story) {
-            $seenStmt->execute([$story['id'], $user['id']]);
-            $story['seen'] = $seenStmt->fetchColumn() > 0;
+        if (!$stories) {
+            return [];
         }
-        unset($story);
 
-        // group by user
+        // One query for every "have I seen this?" instead of one per story.
+        $ids  = array_column($stories, 'id');
+        $slots = implode(',', array_fill(0, count($ids), '?'));
+
+        $seenStmt = $pdo->prepare(
+            "SELECT story_id FROM story_views
+              WHERE viewer_id = ? AND story_id IN ($slots)"
+        );
+        $seenStmt->execute(array_merge([$viewerId], $ids));
+        $seen = array_flip($seenStmt->fetchAll(PDO::FETCH_COLUMN));
+
         $grouped = [];
 
         foreach ($stories as $story) {
+            $story['seen'] = isset($seen[$story['id']]);
             $uid = $story['user_id'];
 
             if (!isset($grouped[$uid])) {
@@ -193,7 +206,13 @@ public static function create($params) {
             $grouped[$uid]['stories'][] = $story;
         }
 
-        Response::success(['stories' => array_values($grouped)]);
+        return array_values($grouped);
+    }
+
+    public static function feed($params) {
+        $user = AuthMiddleware::requireAuth();
+
+        Response::success(['stories' => self::fetchFeed((int)$user['id'])]);
     }
 
     /* -------------------------

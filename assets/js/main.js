@@ -10,6 +10,30 @@ function appUrl(relPath) {
 
 let sidebarUserCache = null;
 
+/**
+ * Neutral silhouette shown when a user has no picture, while the real one
+ * loads, or when a stored path points at a file that is no longer there.
+ *
+ * This used to fall back to charles.jpg — a real member's photo — so every
+ * user without an avatar appeared as that person.
+ */
+const AVATAR_PLACEHOLDER = appUrl("assets/img/avatar-placeholder.svg");
+
+/**
+ * Points an <img> at a user's avatar, falling back to the placeholder both
+ * when the path is empty and when the file fails to load.
+ */
+function setAvatar(img, storedPath) {
+  if (!img) return;
+  img.onerror = function () {
+    img.onerror = null; // placeholder must never re-trigger this
+    img.src = AVATAR_PLACEHOLDER;
+  };
+  img.src = storedPath
+    ? (window.Api ? Api.assetUrl(storedPath) : storedPath)
+    : AVATAR_PLACEHOLDER;
+}
+
 function escapeHtml(str) {
   return String(str)
     .replace(/&/g, "&amp;")
@@ -83,7 +107,7 @@ function populateProfileForm(u) {
   const picPreview = document.getElementById("profile-picture-preview");
   const picInput = document.getElementById("profile-picture");
   const removePic = document.getElementById("profile-remove-picture");
-  if (picPreview) picPreview.src = u.profile_pic || "assets/img/charles.jpg";
+  setAvatar(picPreview, u.profile_pic);
   if (picInput) picInput.value = "";
   if (removePic) removePic.checked = false;
 }
@@ -98,18 +122,15 @@ if (profilePictureInput && profilePicturePreview) {
   profilePictureInput.addEventListener("change", (event) => {
     const file = event.target.files && event.target.files[0];
     if (!file) {
-      if (sidebarUserCache?.profile_pic) {
-        profilePicturePreview.src = sidebarUserCache.profile_pic;
-      } else {
-        profilePicturePreview.src = "assets/img/charles.jpg";
-      }
+      setAvatar(profilePicturePreview, sidebarUserCache?.profile_pic);
       return;
     }
     if (profileRemovePicture) profileRemovePicture.checked = false;
     if (!file.type.startsWith("image/")) return;
     const reader = new FileReader();
     reader.onload = (e) => {
-      profilePicturePreview.src = e.target?.result || "assets/img/charles.jpg";
+      // A FileReader data: URI is the chosen file itself, not a stored path.
+      profilePicturePreview.src = e.target?.result || AVATAR_PLACEHOLDER;
     };
     reader.readAsDataURL(file);
   });
@@ -118,10 +139,10 @@ if (profilePictureInput && profilePicturePreview) {
 if (profileRemovePicture && profilePicturePreview) {
   profileRemovePicture.addEventListener("change", () => {
     if (profileRemovePicture.checked) {
-      profilePicturePreview.src = "assets/img/charles.jpg";
+      profilePicturePreview.src = AVATAR_PLACEHOLDER;
       if (profilePictureInput) profilePictureInput.value = "";
     } else if (sidebarUserCache?.profile_pic) {
-      profilePicturePreview.src = sidebarUserCache.profile_pic;
+      setAvatar(profilePicturePreview, sidebarUserCache.profile_pic);
     }
   });
 }
@@ -167,7 +188,8 @@ if (profileForm) {
         }
         return;
       }
-      await loadSidebarProfile();
+      // The profile just changed, so the cached bootstrap payload is stale.
+      await loadSidebarProfile({ force: true });
       setAppStage("main");
     } catch (err) {
       console.error(err);
@@ -321,17 +343,25 @@ document.addEventListener("DOMContentLoaded", async () => {
   hydrateMentions();
 });
 
-async function loadSidebarProfile() {
+/**
+ * Paints the sidebar profile.
+ *
+ * On first load the data comes from the shared bootstrap request — the same
+ * promise feed.js and network-friends.js await — so this costs no extra round
+ * trip. After saving the profile the cached payload is stale, so those call
+ * sites pass {force: true} to re-fetch.
+ *
+ * @param {{force?: boolean}} [opts]
+ */
+async function loadSidebarProfile(opts) {
   try {
-    const res = await fetch(appUrl("app/me.php"));
-    const data = await res.json();
+    const data = await Api.bootstrap(opts && opts.force);
+    const u = data && data.user;
 
-    if (!data.success) {
-      console.warn("Sidebar profile:", data.message || "failed");
+    if (!u) {
+      console.warn("Sidebar profile: no user in response");
       return;
     }
-
-    const u = data.user;
     sidebarUserCache = u;
 
     const profilePic = document.getElementById("profilePic");
@@ -348,7 +378,7 @@ async function loadSidebarProfile() {
 
     const displayName = [u.first_name, u.last_name].filter(Boolean).join(" ").trim() || u.username || "Member";
 
-    if (profilePic) profilePic.src = u.profile_pic || "assets/img/charles.jpg";
+    setAvatar(profilePic, u.profile_pic);
     if (profileName) profileName.textContent = displayName;
 
     if (profileHandle && u.username) {

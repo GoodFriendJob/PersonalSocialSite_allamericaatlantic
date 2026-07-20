@@ -2,7 +2,9 @@
 require_once __DIR__ . '/app/core/Session.php';
 require_once __DIR__ . '/app/core/Asset.php';
 
-Session::start();
+// Read-only: this page only checks who is logged in. Holding the session lock
+// while the page renders would block the API calls the page then fires.
+Session::startReadOnly();
 
 if (Session::userId() === null) {
     header("Location: login.html");
@@ -61,7 +63,13 @@ if ($__app_base === "." || $__app_base === "/") {
 
                 <div class="profile-photo-wrapper">
                     <div class="profile-photo-inner">
-                        <img id="profilePic" src="<?= asset('assets/img/charles.jpg') ?>" class="profile-photo">
+                        <!-- Neutral placeholder until main.js swaps in the real
+                             avatar. onerror catches a stored path whose file is
+                             missing, so a broken image never reaches the user. -->
+                        <img id="profilePic" src="<?= asset('assets/img/avatar-placeholder.svg') ?>"
+                             data-placeholder="<?= asset('assets/img/avatar-placeholder.svg') ?>"
+                             onerror="this.onerror=null;this.src=this.dataset.placeholder;"
+                             alt="" class="profile-photo">
                     </div>
                 </div>
 
@@ -165,7 +173,11 @@ if ($__app_base === "." || $__app_base === "/") {
 
                     <label for="profile-picture">Profile picture</label>
                     <input type="file" id="profile-picture" name="profile_picture" accept="image/*">
-                    <img id="profile-picture-preview" class="profile-picture-preview" src="<?= asset('assets/img/charles.jpg') ?>" alt="Profile picture preview">
+                    <img id="profile-picture-preview" class="profile-picture-preview"
+                         src="<?= asset('assets/img/avatar-placeholder.svg') ?>"
+                         data-placeholder="<?= asset('assets/img/avatar-placeholder.svg') ?>"
+                         onerror="this.onerror=null;this.src=this.dataset.placeholder;"
+                         alt="Profile picture preview">
                     <label class="profile-remove-pic-label" for="profile-remove-picture">
                         <input type="checkbox" id="profile-remove-picture" name="remove_picture" value="1">
                         Remove current profile picture

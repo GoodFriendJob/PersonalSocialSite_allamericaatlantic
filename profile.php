@@ -1,7 +1,9 @@
 <?php
 require_once __DIR__ . '/app/core/Session.php';
 require_once __DIR__ . '/app/core/Asset.php';
-Session::start();
+// Read-only: this page never writes to the session, so it releases the lock
+// immediately rather than serializing concurrent requests.
+Session::startReadOnly();
 require __DIR__ . "/app/config/db.php";
 
 $u = isset($_GET["u"]) ? trim((string) $_GET["u"]) : "";
@@ -78,7 +80,9 @@ if (!empty($profile["city"]) || !empty($profile["state"])) {
     $hometown = "Not set yet";
 }
 
-$pfp = $profile["profile_pic"] ? $h($profile["profile_pic"]) : "assets/img/charles.jpg";
+// Neutral silhouette rather than charles.jpg, which is a real member's photo:
+// every user without an avatar used to render as that person.
+$pfp = $profile["profile_pic"] ? $h($profile["profile_pic"]) : asset('assets/img/avatar-placeholder.svg');
 $ratingVal = $profile["community_rating"] !== null ? number_format((float) $profile["community_rating"], 1) : "0.0";
 $hl = (int) ($profile["num_highlights"] ?? 0);
 $sv = (int) ($profile["num_saved_posts"] ?? 0);

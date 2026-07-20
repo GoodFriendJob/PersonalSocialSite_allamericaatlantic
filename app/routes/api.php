@@ -20,6 +20,14 @@ require_once __DIR__ . '/../controllers/FriendController.php';
 require_once __DIR__ . '/../controllers/SaveController.php';
 require_once __DIR__ . '/../controllers/ShareController.php';
 require_once __DIR__ . '/../controllers/CategoryController.php';
+require_once __DIR__ . '/../controllers/BootstrapController.php';
+
+/* -------------------------
+   BOOTSTRAP
+   Everything app.php needs on load, in one request. The individual routes
+   below still exist and are used to refresh a single section afterwards.
+--------------------------*/
+$router->add('GET',  'bootstrap',     ['BootstrapController', 'index']);
 
 /* -------------------------
    AUTH
