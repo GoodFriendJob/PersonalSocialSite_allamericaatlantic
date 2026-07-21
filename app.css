@@ -1594,3 +1594,339 @@ a.profile-handle:hover {
         grid-template-columns: 1fr;
     }
 }
+
+/* ==========================================================================
+   FRIENDS & NETWORK — row actions, requests, and the chat popup
+   ========================================================================== */
+
+/* Friend / member rows now carry action buttons, so the row is a flex line
+   with the identity link growing and the actions pinned to the right. */
+.friend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding-right: 8px;
+}
+
+.friend-item .friend-profile-link {
+    flex: 1 1 auto;
+    grid-template-columns: 42px minmax(0, 1fr);
+    min-width: 0;
+}
+
+.friend-actions {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 5px;
+}
+
+.network-action-btn {
+    padding: 6px 11px;
+    border: 1px solid #2c3b68;
+    border-radius: 999px;
+    background: #151d3b;
+    color: #c8d1eb;
+    font: inherit;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    transition: background .15s ease, border-color .15s ease, color .15s ease, transform .1s ease;
+    white-space: nowrap;
+}
+
+.network-action-btn:hover:not(:disabled) { transform: translateY(-1px); }
+
+.network-action-btn.is-primary {
+    background: #ff6a2a;
+    border-color: #ff6a2a;
+    color: #10162d;
+}
+.network-action-btn.is-primary:hover:not(:disabled) { background: #ff8551; border-color: #ff8551; }
+
+.network-action-btn.is-muted { background: #1a2444; }
+.network-action-btn.is-muted:hover:not(:disabled) {
+    border-color: #cc0033;
+    color: #ff829c;
+}
+
+.network-action-btn:disabled { opacity: .6; cursor: default; }
+
+/* --- Pending request sections below the friends list --------------------- */
+.request-section {
+    margin: 4px 0 14px;
+    padding-top: 12px;
+    border-top: 1px solid #1f294a;
+}
+
+.request-section-title {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin: 0 0 9px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .02em;
+    text-transform: uppercase;
+    color: #9cadd2;
+}
+
+.request-count {
+    display: inline-grid;
+    place-items: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 999px;
+    background: #ff6a2a;
+    color: #10162d;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.request-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.request-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 6px;
+    padding: 5px 8px 5px 5px;
+    border: 1px solid #26345c;
+    border-radius: 9px;
+    background: #121a36;
+}
+
+.request-item .friend-profile-link {
+    flex: 1 1 auto;
+    grid-template-columns: 36px minmax(0, 1fr);
+    gap: 8px;
+    min-height: 40px;
+    padding: 2px 0;
+}
+.request-item .avatar-container .avatar { width: 36px; height: 36px; }
+
+.request-pending-tag {
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: #26345c;
+    color: #bfc9e4;
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+/* --- Search dropdown state (Add / Requested / Friends) ------------------- */
+.send-req-btn { font-weight: 700; }
+
+/* ==========================================================================
+   CHAT POPUP
+   ========================================================================== */
+.chat-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1200;
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-end;
+}
+.chat-modal[hidden] { display: none; }
+
+.chat-modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(4, 8, 20, .55);
+}
+
+.chat-window {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: min(380px, calc(100vw - 24px));
+    height: min(560px, calc(100vh - 90px));
+    margin: 0 20px 20px 0;
+    border: 1px solid #2c3b68;
+    border-radius: 16px;
+    background: #0f152e;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, .5);
+    overflow: hidden;
+}
+
+.chat-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    border-bottom: 1px solid #1f294a;
+    background: #121a36;
+}
+.chat-peer-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+.chat-peer-meta { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.chat-peer-meta strong { font-size: 14px; }
+.chat-peer-meta small { color: #9cadd2; font-size: 11px; }
+.chat-close-btn {
+    border: 0;
+    background: transparent;
+    color: #9cadd2;
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+}
+.chat-close-btn:hover { color: #fff; }
+
+.chat-messages {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 14px;
+    overflow-y: auto;
+    scrollbar-color: #465887 #11182f;
+    scrollbar-width: thin;
+}
+.chat-empty {
+    margin: auto;
+    color: #7f8daf;
+    font-size: 13px;
+}
+
+.chat-bubble {
+    max-width: 78%;
+    padding: 8px 11px;
+    border-radius: 14px;
+    font-size: 13px;
+    line-height: 1.35;
+}
+.chat-bubble-text { margin: 0; overflow-wrap: anywhere; }
+.chat-bubble-time {
+    display: block;
+    margin-top: 3px;
+    font-size: 9px;
+    opacity: .65;
+    text-align: right;
+}
+.chat-bubble.is-mine {
+    align-self: flex-end;
+    background: #ff6a2a;
+    color: #10162d;
+    border-bottom-right-radius: 4px;
+}
+.chat-bubble.is-theirs {
+    align-self: flex-start;
+    background: #1a2444;
+    color: #e7ecf9;
+    border-bottom-left-radius: 4px;
+}
+
+.chat-form {
+    display: flex;
+    gap: 8px;
+    padding: 10px 12px;
+    border-top: 1px solid #1f294a;
+    background: #121a36;
+}
+.chat-form input {
+    flex: 1;
+    padding: 9px 12px;
+    border: 1px solid #2c3b68;
+    border-radius: 999px;
+    background: #0f152e;
+    color: #e7ecf9;
+    font: inherit;
+    font-size: 13px;
+    outline: none;
+}
+.chat-form input:focus { border-color: #ff6a2a; }
+.chat-send-btn {
+    flex: 0 0 auto;
+    padding: 9px 16px;
+    border: 0;
+    border-radius: 999px;
+    background: #ff6a2a;
+    color: #10162d;
+    font-weight: 700;
+    cursor: pointer;
+}
+.chat-send-btn:hover { background: #ff8551; }
+
+.chat-status {
+    padding: 0 14px 8px;
+    margin: 0;
+    font-size: 11px;
+    color: #9cadd2;
+    background: #121a36;
+}
+.chat-status-error { color: #ff829c; }
+
+@media (max-width: 620px) {
+    .chat-window {
+        width: 100vw;
+        height: 100vh;
+        margin: 0;
+        border-radius: 0;
+    }
+    .chat-modal { align-items: stretch; justify-content: stretch; }
+}
+
+/* ==========================================================================
+   DAILY FEED — community rating badge (top-right of each post card)
+   ========================================================================== */
+.post-rating-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 11px 5px 9px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1;
+    white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .28);
+}
+.post-rating-badge .prb-star { font-size: 14px; }
+.post-rating-badge .prb-score { letter-spacing: .01em; }
+.post-rating-badge .prb-count {
+    padding-left: 6px;
+    margin-left: 1px;
+    border-left: 1px solid currentColor;
+    font-size: 11px;
+    font-weight: 700;
+    opacity: .85;
+}
+
+/* Elite (4.5+): gold */
+.post-rating-badge.is-elite {
+    background: linear-gradient(135deg, #ffd873, #f5a623);
+    border-color: #ffe49b;
+    color: #3a2600;
+}
+/* Strong (3.5-4.4): green */
+.post-rating-badge.is-strong {
+    background: linear-gradient(135deg, #1f7a4d, #2fae6b);
+    border-color: #47d68d;
+    color: #eafff3;
+}
+/* Rising (<3.5): blue */
+.post-rating-badge.is-rising {
+    background: linear-gradient(135deg, #16406e, #1f6fb8);
+    border-color: #4aa3e6;
+    color: #eaf4ff;
+}
+/* Unrated */
+.post-rating-badge.is-unrated {
+    background: #151d3b;
+    border-color: #2c3b68;
+    color: #9cadd2;
+}
+.post-rating-badge.is-unrated .prb-star { color: #6f7896; }

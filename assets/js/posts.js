@@ -133,13 +133,7 @@
     identity.append(author, meta);
     user.appendChild(identity);
     header.appendChild(user);
-    if (post.rating) {
-      const rating = document.createElement("span");
-      rating.className = "post-tag";
-      rating.textContent = `${"★".repeat(Math.round(post.rating))}${"☆".repeat(5 - Math.round(post.rating))}`;
-      rating.title = `Community rating: ${post.rating} out of 5`;
-      header.appendChild(rating);
-    }
+    header.appendChild(ratingBadge(post));
     card.appendChild(header);
 
     if (post.content) {
@@ -300,6 +294,41 @@
     error.hidden = true;
     card.appendChild(error);
     return card;
+  }
+
+  // Top-right community-rating badge for a post card. Shows the average as a
+  // number with a star and rating count, or a "New" pill when unrated.
+  function ratingBadge(post) {
+    const average = Number(post.rating) || 0;
+    const count = Number(post.rating_count) || 0;
+    const badge = document.createElement("span");
+
+    if (!average) {
+      badge.className = "post-rating-badge is-unrated";
+      badge.innerHTML = '<span class="prb-star">☆</span><span class="prb-score">New</span>';
+      badge.title = "No community ratings yet — be the first to rate.";
+      return badge;
+    }
+
+    const tier = average >= 4.5 ? "is-elite" : average >= 3.5 ? "is-strong" : "is-rising";
+    badge.className = `post-rating-badge ${tier}`;
+    badge.title = `Community rating: ${average.toFixed(1)} out of 5${count ? ` from ${count} rating${count === 1 ? "" : "s"}` : ""}`;
+
+    const star = document.createElement("span");
+    star.className = "prb-star";
+    star.textContent = "★";
+    const score = document.createElement("span");
+    score.className = "prb-score";
+    score.textContent = average.toFixed(1);
+    badge.append(star, score);
+
+    if (count) {
+      const total = document.createElement("span");
+      total.className = "prb-count";
+      total.textContent = count >= 1000 ? `${(count / 1000).toFixed(1)}k` : String(count);
+      badge.appendChild(total);
+    }
+    return badge;
   }
 
   function actionButton(label, extraClass) {
