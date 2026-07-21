@@ -25,7 +25,7 @@ if ($__app_base === "." || $__app_base === "/") {
 <header class="topbar">
 
     <div class="topbar-left">
-        <img src="assets/icons/aaa_logo_dark.png" alt="AAA" class="mini-logo">
+        <img src="assets/icons/logo_dark.png" alt="AAA" class="mini-logo">
     </div>
 
     <div class="topbar-center">
