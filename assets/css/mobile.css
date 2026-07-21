@@ -309,6 +309,14 @@ select {
         transform: translateX(0);
     }
 
+    .sidebar-right .friends-list {
+        max-height: min(52dvh, 580px);
+    }
+
+    .sidebar-right .network-view-tabs {
+        margin-top: 9px;
+    }
+
     .mobile-drawer-heading {
         position: sticky;
         z-index: 2;
@@ -556,6 +564,11 @@ select {
     .mobile-panel-button {
         width: 100%;
         min-height: 38px;
+        font-size: 11px;
+    }
+
+    .network-relation-badge {
+        max-width: 58px;
     }
 
     .mobile-profile-summary-button {

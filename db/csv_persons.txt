@@ -1,0 +1,15 @@
+,Mike,Freighn,4
+,Kathie,Arnott,2
+,Zeta,Flowers,1
+,Guy,Donnet,3
+,Harriet,Hennesey,3
+,George,Terry,2
+,Geoffrey,Paul,1
+,Laura,Winalott,
+,Peter,Bellows,1
+,Russell,Tandie,2
+,Riley,Goffs,1
+,Sue,Gentle,
+,Taylor,McFly,1
+,William,Brite,5
+,Peter,Flynn,5

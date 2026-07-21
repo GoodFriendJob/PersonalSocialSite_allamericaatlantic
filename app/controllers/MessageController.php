@@ -25,9 +25,16 @@ class MessageController {
             return;
         }
 
+        // Opening the thread reads it: clear the unread flag on anything sent
+        // to me here so the message list and any badge stay in sync.
+        $pdo->prepare(
+            "UPDATE messages SET is_read = 1
+             WHERE thread_id = ? AND receiver_id = ? AND is_read = 0"
+        )->execute([$threadId, $user['id']]);
+
         // Fetch messages with pagination
         $stmt = $pdo->prepare(
-            "SELECT m.id, m.sender_id, m.receiver_id, m.content, m.created_at,
+            "SELECT m.id, m.sender_id, m.receiver_id, m.content, m.is_read, m.created_at,
                     u.username AS sender
              FROM messages m
              JOIN users u ON u.id = m.sender_id
@@ -41,7 +48,10 @@ class MessageController {
         $stmt->bindValue(3, $offset, PDO::PARAM_INT);
         $stmt->execute();
 
-        Response::success(['messages' => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
+        Response::success([
+            'messages' => $stmt->fetchAll(PDO::FETCH_ASSOC),
+            'me'       => $user['id'],
+        ]);
     }
 
     /* -------------------------
@@ -92,9 +102,28 @@ class MessageController {
 
         $messageId = (int)$pdo->lastInsertId();
 
+        // Keep the thread list sorted by recency and let the receiver know.
+        $pdo->prepare("UPDATE message_threads SET last_message_at = NOW() WHERE id = ?")
+            ->execute([$threadId]);
+
+        $pdo->prepare(
+            "INSERT INTO notifications (user_id, from_user_id, type, message)
+             VALUES (?, ?, 'message', ?)"
+        )->execute([$receiver, $user['id'], "{$user['username']} sent you a message"]);
+
         // Log activity
         ActivityLogger::log($user['id'], 'send_message', $threadId, 'thread');
 
-        Response::success(['message_id' => $messageId]);
+        // Return the stored row so the sender can render it without a refetch.
+        $stmt = $pdo->prepare(
+            "SELECT id, thread_id, sender_id, receiver_id, content, is_read, created_at
+             FROM messages WHERE id = ?"
+        );
+        $stmt->execute([$messageId]);
+
+        Response::success([
+            'message_id' => $messageId,
+            'message'    => $stmt->fetch(PDO::FETCH_ASSOC),
+        ]);
     }
 }

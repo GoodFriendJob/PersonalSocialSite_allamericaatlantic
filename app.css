@@ -28,9 +28,11 @@ body {
     gap: 8px;
 }
 
+
 .topbar-pill-buttons {
     display: inline-flex;
     gap: 10px;
+    margin-bottom: 6px;
 }
 .topbar-right {
     display: flex;
@@ -42,6 +44,7 @@ body {
     justify-content: flex-start;
     align-items: center;
 }
+
 
 .pill-btn {
     border-radius: 999px;
@@ -74,6 +77,10 @@ body {
     object-fit: contain;
 }
 
+
+
+
+
 .slogan {
     font-size: 12px;
     opacity: 0.85;
@@ -81,7 +88,6 @@ body {
 
 .topbar-actions {
     display: flex;
-    flex-direction: column;
     justify-content: center;
     gap: 10px;
 }
@@ -1154,6 +1160,56 @@ a.profile-handle:hover {
     margin-bottom: 4px;
 }
 
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.online-count {
+    color: #80d7ff;
+    font-size: 10px;
+    white-space: nowrap;
+}
+
+.network-view-tabs {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+    margin: 12px 0 10px;
+}
+
+.network-view-tab {
+    min-height: 38px;
+    padding: 7px 6px;
+    border: 1px solid #2c3b68;
+    border-radius: 9px;
+    background: #151d3b;
+    color: #c8d1eb;
+    font: inherit;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.network-view-tab span {
+    display: inline-grid;
+    min-width: 19px;
+    height: 19px;
+    margin-left: 3px;
+    place-items: center;
+    border-radius: 999px;
+    background: #26345d;
+    font-size: 9px;
+}
+
+.network-view-tab.is-active {
+    border-color: #ff6a2a;
+    background: #24325d;
+    color: #fff;
+}
+
 .sidebar-subtitle {
     font-size: 12px;
     opacity: 0.8;
@@ -1162,14 +1218,37 @@ a.profile-handle:hover {
 
 .friends-list {
     list-style: none;
-    margin-bottom: 16px;
+    max-height: 580px;
+    margin: 0 0 16px;
+    padding: 0 3px 0 0;
+    overflow-y: auto;
+    scrollbar-color: #465887 #11182f;
+    scrollbar-width: thin;
 }
 
 .friend-item {
-    display: flex;
+    min-height: 52px;
+    margin-bottom: 6px;
+    border: 1px solid transparent;
+    border-radius: 9px;
+    background: #121a36;
+}
+
+.friend-item:hover,
+.friend-item:focus-within {
+    border-color: #334775;
+    background: #182344;
+}
+
+.friend-profile-link {
+    display: grid;
+    grid-template-columns: 42px minmax(0, 1fr) auto;
     align-items: center;
-    gap: 10px;
-    margin-bottom: 10px;
+    gap: 8px;
+    min-height: 52px;
+    padding: 5px 6px;
+    color: inherit;
+    text-decoration: none;
 }
 
 .avatar-container {
@@ -1179,6 +1258,8 @@ a.profile-handle:hover {
 
 .avatar-container .avatar {
     display: block;
+    width: 42px;
+    height: 42px;
     object-fit: cover;
 }
 
@@ -1197,19 +1278,60 @@ a.profile-handle:hover {
     background: #3aff7a;
 }
 
-.friend-info h4,
-.friend-info p {
-    margin: 0;
+.friend-info {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 1px;
 }
 
-.friend-info h4 {
+.friend-info strong,
+.friend-info small,
+.friend-presence {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.friend-info strong {
     font-size: 13px;
 }
 
-.friend-info p {
-    margin-top: 2px;
+.friend-info small {
+    color: #9cadd2;
+    font-size: 10px;
+}
+
+.friend-presence {
+    color: #7f8daf;
     font-size: 11px;
-    opacity: 0.75;
+}
+
+.friend-presence.is-online {
+    color: #3aff7a;
+}
+
+.network-relation-badge {
+    max-width: 68px;
+    padding: 4px 6px;
+    border-radius: 999px;
+    background: #26345c;
+    color: #bfc9e4;
+    font-size: 8px;
+    font-weight: 700;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.network-relation-badge.is-friend {
+    background: #174634;
+    color: #63f5aa;
+}
+
+.network-relation-badge.is-connection {
+    background: #163d60;
+    color: #80d7ff;
 }
 
 .friend-row {
@@ -1262,189 +1384,6 @@ a.profile-handle:hover {
     color: #000;
     font-weight: 600;
     cursor: pointer;
-}
-
-/* ---- Friend requests: incoming (accept/decline) and sent (cancel) ---- */
-.network-block {
-    margin: 0 0 16px;
-    padding: 12px;
-    background: #151c3a;
-    border-radius: 10px;
-}
-
-.network-block[hidden] {
-    display: none;
-}
-
-.network-block-title {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin: 0 0 10px;
-    font-size: 13px;
-    font-weight: 600;
-}
-
-.network-count {
-    min-width: 20px;
-    padding: 1px 7px;
-    border-radius: 999px;
-    background: #ff6a2a;
-    color: #000;
-    font-size: 11px;
-    font-weight: 700;
-    text-align: center;
-}
-
-.request-list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-}
-
-.request-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 0;
-    border-top: 1px solid #232c53;
-}
-
-.request-row:first-child {
-    border-top: none;
-}
-
-.request-row .avatar-small {
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
-    object-fit: cover;
-}
-
-/* min-width:0 lets the long-name ellipsis actually kick in inside the flex row */
-.request-info {
-    flex: 1 1 auto;
-    min-width: 0;
-}
-
-.request-name,
-.request-handle {
-    margin: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.request-name {
-    font-size: 13px;
-    font-weight: 600;
-}
-
-.request-handle {
-    margin-top: 2px;
-    font-size: 11px;
-    opacity: 0.75;
-}
-
-.request-actions {
-    display: flex;
-    flex: 0 0 auto;
-    gap: 6px;
-}
-
-.request-accept,
-.request-decline,
-.request-cancel {
-    padding: 5px 10px;
-    border: none;
-    border-radius: 6px;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-}
-
-.request-accept {
-    background: #3aff7a;
-    color: #04220f;
-}
-
-.request-decline,
-.request-cancel {
-    background: transparent;
-    border: 1px solid #3c4677;
-    color: #cdd5f2;
-}
-
-.request-accept:disabled,
-.request-decline:disabled,
-.request-cancel:disabled {
-    opacity: 0.55;
-    cursor: default;
-}
-
-.network-status {
-    margin: 0 0 12px;
-    font-size: 12px;
-    color: #9fe8b8;
-    min-height: 1em;
-}
-
-.network-status.is-error {
-    color: #ff8f7a;
-}
-
-/* Search results sit on the dark sidebar, so override the light default set
-   inline in app.php on #search-results-dropdown. */
-.search-results-dropdown {
-    max-height: 260px;
-    overflow-y: auto;
-    background: #0f1530 !important;
-    border: 1px solid #232c53;
-}
-
-.search-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 10px;
-    border-bottom: 1px solid #232c53;
-}
-
-.search-row:last-child {
-    border-bottom: none;
-}
-
-.search-name {
-    flex: 1 1 auto;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-size: 12px;
-}
-
-.search-add {
-    flex: 0 0 auto;
-    padding: 4px 10px;
-    border: none;
-    border-radius: 4px;
-    background: #ff6a2a;
-    color: #000;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-}
-
-.search-add:disabled {
-    background: #3c4677;
-    color: #cdd5f2;
-    cursor: default;
-}
-
-.search-empty {
-    padding: 8px 10px;
-    font-size: 12px;
-    opacity: 0.7;
 }
 
 /* Pending Requests Title */
@@ -1553,6 +1492,40 @@ a.profile-handle:hover {
     overflow: hidden;
     border-radius: 10px;
     background: #050814;
+}
+
+.network-search-result {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 8px 10px;
+    border-bottom: 1px solid #dce1ea;
+    color: #26334b;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.network-search-empty {
+    padding: 9px 10px;
+    color: #59647a;
+    font-size: 12px;
+}
+
+.send-req-btn {
+    flex: 0 0 auto;
+    padding: 5px 8px;
+    border: 0;
+    border-radius: 6px;
+    background: #003366;
+    color: #fff;
+    font-size: 10px;
+    cursor: pointer;
+}
+
+.send-req-btn:disabled {
+    background: #788398;
+    cursor: default;
 }
 
 .post-media {

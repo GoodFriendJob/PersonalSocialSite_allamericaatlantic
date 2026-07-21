@@ -38,9 +38,10 @@ select[name="state"] {
 
 .register-box {
     background: white;
-    width: 360px;
+    width: min(360px, calc(100% - 32px));
     margin: 0 auto;
     padding: 40px;
+    box-sizing: border-box;
     border-radius: 10px;
     box-shadow: 0 0 15px rgba(0,0,0,0.2);
     text-align: center;
@@ -72,6 +73,37 @@ select[name="state"] {
 
 .register-box button:hover {
     background: #8b1a1a;
+}
+
+.register-login-option {
+    margin-top: 22px;
+    padding-top: 18px;
+    border-top: 1px solid #d8dce5;
+    color: #33415c;
+    font-size: 14px;
+}
+
+.login-button {
+    display: block;
+    width: 100%;
+    margin-top: 9px;
+    padding: 12px;
+    box-sizing: border-box;
+    border: 2px solid #0A1F44;
+    border-radius: 6px;
+    background: #0A1F44;
+    color: white;
+    font-size: 16px;
+    font-weight: 700;
+    text-align: center;
+    text-decoration: none;
+    transition: background-color .2s ease, color .2s ease;
+}
+
+.login-button:hover,
+.login-button:focus-visible {
+    background: white;
+    color: #0A1F44;
 }
 
 .login-link {

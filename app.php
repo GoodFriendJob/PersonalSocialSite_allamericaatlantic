@@ -25,7 +25,7 @@ if ($__app_base === "." || $__app_base === "/") {
 <header class="topbar">
 
     <div class="topbar-left">
-        <img src="assets/icons/logo_dark.png" alt="AAA" class="mini-logo">
+        <img src="assets/icons/aaa_logo_dark.png" alt="AAA" class="mini-logo">
     </div>
 
     <div class="topbar-center">
@@ -38,13 +38,14 @@ if ($__app_base === "." || $__app_base === "/") {
             <span class="slogan">Be best of the best in every category</span>
         </div>
 
-    </div>
-    
-    <div class="topbar-right">
         <div class="topbar-actions">
             <button class="action-btn small">Daily Goal</button>
             <button class="action-btn">New Highlight Reel of the Day</button>
         </div>
+    </div>
+
+    <div class="topbar-right">
+        <img src="assets/icons/aaa_logo_dark.png" alt="AAA logo" class="main-logo">
     </div>
 
 </header>
@@ -59,7 +60,7 @@ if ($__app_base === "." || $__app_base === "/") {
         </button>
         <strong>All American</strong>
         <button type="button" class="mobile-panel-button" data-mobile-panel="network" aria-controls="mobile-network-drawer" aria-expanded="false">
-            Network <span aria-hidden="true">&#128101;</span>
+            Friends &amp; Network <span aria-hidden="true">&#128101;</span>
         </button>
     </nav>
 
@@ -377,37 +378,40 @@ if ($__app_base === "." || $__app_base === "/") {
 <!-- ========== RIGHT SIDEBAR: NETWORK ========== -->
 <aside id="mobile-network-drawer" class="sidebar-right" aria-label="Network sidebar">
     <div class="mobile-drawer-heading">
-        <strong>Your network</strong>
+        <strong>Friends &amp; Network</strong>
         <button type="button" class="mobile-drawer-close" data-mobile-close aria-label="Close network sidebar">&times;</button>
     </div>
     <div class="sidebar-header">
-        <h3 class="sidebar-title">Network Friends</h3>
-        <!-- Added missing online counter -->
+        <h3 class="sidebar-title">Friends &amp; Network</h3>
         <span class="online-count" id="onlineCount">0 Online</span>
     </div>
-    
-    <!-- Online friends -->
+
+    <div class="network-view-tabs" role="tablist" aria-label="Friends and network lists">
+        <button type="button" class="network-view-tab" data-network-view="friends" role="tab" aria-selected="false">
+            My Friends <span id="friendsTabCount">0</span>
+        </button>
+        <button type="button" class="network-view-tab is-active" data-network-view="network" role="tab" aria-selected="true">
+            My Network <span id="networkTabCount">0</span>
+        </button>
+    </div>
+
     <ul id="friendsList" class="friends-list">
         <li class="loading-friends">Loading network...</li>
     </ul>
 
-    <!-- Requests other members sent me: accept or decline -->
-    <section id="friend-requests-block" class="network-block" hidden>
-        <h4 class="network-block-title">
-            Friend requests <span id="friend-requests-count" class="network-count">0</span>
+    <section id="friend-requests" class="request-section" hidden>
+        <h4 class="request-section-title">
+            Friend Requests <span id="requestCount" class="request-count">0</span>
         </h4>
-        <ul id="friend-requests-list" class="request-list"></ul>
+        <ul id="requestList" class="request-list"></ul>
     </section>
 
-    <!-- Requests I sent that are still waiting: cancel -->
-    <section id="friend-sent-block" class="network-block" hidden>
-        <h4 class="network-block-title">
-            Requests sent <span id="friend-sent-count" class="network-count">0</span>
+    <section id="sent-requests" class="request-section" hidden>
+        <h4 class="request-section-title">
+            Sent Requests <span id="sentCount" class="request-count">0</span>
         </h4>
-        <ul id="friend-sent-list" class="request-list"></ul>
+        <ul id="sentList" class="request-list"></ul>
     </section>
-
-    <p id="friend-network-status" class="network-status" role="status" aria-live="polite"></p>
 
   <div class="add-friend-card">
     <h4>Add to your circle</h4>
@@ -425,6 +429,29 @@ if ($__app_base === "." || $__app_base === "/") {
 
 </div> <!-- end layout -->
 </div>  <!-- end app-shell -->
+
+<!-- ================= CHAT POPUP ================= -->
+<div id="chat-modal" class="chat-modal" hidden aria-hidden="true">
+    <div class="chat-modal-backdrop" data-chat-close></div>
+    <div class="chat-window" role="dialog" aria-modal="true" aria-label="Direct message">
+        <header class="chat-header">
+            <img id="chat-peer-avatar" class="chat-peer-avatar" src="assets/img/default-avatar.svg" alt="">
+            <div class="chat-peer-meta">
+                <strong id="chat-peer-name">Member</strong>
+                <small id="chat-peer-handle"></small>
+            </div>
+            <button type="button" class="chat-close-btn" data-chat-close aria-label="Close conversation">&times;</button>
+        </header>
+        <div id="chat-messages" class="chat-messages" aria-live="polite">
+            <p class="chat-empty">Say hello 👋</p>
+        </div>
+        <form id="chat-form" class="chat-form">
+            <input id="chat-input" type="text" maxlength="2000" placeholder="Write a message..." autocomplete="off" required>
+            <button type="submit" class="chat-send-btn">Send</button>
+        </form>
+        <p id="chat-status" class="chat-status" role="status" aria-live="polite"></p>
+    </div>
+</div>
 <script>
 window.__APP_BASE__ = <?= json_encode($__app_base, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
 window.__CURRENT_USER_ID__ = <?= (int)$_SESSION['user_id'] ?>;
@@ -433,6 +460,7 @@ window.__CURRENT_USER_ID__ = <?= (int)$_SESSION['user_id'] ?>;
 <script src="assets/js/ratings.js"></script>
 <script src="assets/js/stories.js"></script>
 <script src="assets/js/posts.js"></script>
+<script src="assets/js/messages.js"></script>
 <script src="assets/js/network-friends.js"></script>
 <script src="assets/js/mobile-layout.js"></script>
 

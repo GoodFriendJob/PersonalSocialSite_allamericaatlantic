@@ -23,12 +23,15 @@ class MessageReactionController {
             Response::error("Missing reaction", 400);
             return;
         }
+        // The reaction column is varchar(10); keep a single emoji well inside it.
+        if ((function_exists('mb_strlen') ? mb_strlen($reaction) : strlen($reaction)) > 4) {
+            Response::error("Reaction is too long", 400);
+            return;
+        }
 
-        // Verify message exists
-        $stmt = $pdo->prepare("SELECT id FROM messages WHERE id = ?");
-        $stmt->execute([$msgId]);
-
-        if (!$stmt->fetch()) {
+        // You can only react to a message in a thread you belong to. Without
+        // this any authenticated user could react to any message by id.
+        if (!self::canAccessMessage($pdo, $msgId, $user['id'])) {
             Response::error("Message not found", 404);
             return;
         }
@@ -74,8 +77,13 @@ class MessageReactionController {
     public static function list($params) {
         global $pdo;
 
-        AuthMiddleware::requireAuth();
+        $user  = AuthMiddleware::requireAuth();
         $msgId = (int)$params['id'];
+
+        if (!self::canAccessMessage($pdo, $msgId, $user['id'])) {
+            Response::error("Message not found", 404);
+            return;
+        }
 
         $stmt = $pdo->prepare(
             "SELECT r.reaction, u.username
@@ -86,5 +94,23 @@ class MessageReactionController {
         $stmt->execute([$msgId]);
 
         Response::success(['reactions' => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
+    }
+
+    /**
+     * True when $userId is a participant of the thread the message belongs to.
+     * Reactions are only meaningful inside a conversation you are part of.
+     */
+    private static function canAccessMessage(PDO $pdo, int $msgId, int $userId): bool
+    {
+        $stmt = $pdo->prepare(
+            "SELECT 1
+             FROM messages m
+             JOIN message_threads t ON t.id = m.thread_id
+             WHERE m.id = ? AND (t.user1_id = ? OR t.user2_id = ?)
+             LIMIT 1"
+        );
+        $stmt->execute([$msgId, $userId, $userId]);
+
+        return (bool)$stmt->fetchColumn();
     }
 }

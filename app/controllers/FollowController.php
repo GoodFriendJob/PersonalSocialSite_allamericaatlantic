@@ -11,11 +11,19 @@ class FollowController {
         $user = AuthMiddleware::requireAuth();
         $targetId = (int)$params['id']; // user being followed
 
+        if ($targetId <= 0 || $targetId === $user['id']) {
+            Response::error('Invalid network member', 400);
+            return;
+        }
+
         $stmt = $pdo->prepare(
-            "INSERT IGNORE INTO followers (user_id, follower_id, created_at)
-             VALUES (?, ?, NOW())"
+            "INSERT INTO followers (follower_id, following_id, created_at)
+             SELECT ?, ?, NOW()
+             WHERE NOT EXISTS (
+                 SELECT 1 FROM followers WHERE follower_id = ? AND following_id = ?
+             )"
         );
-        $stmt->execute([$targetId, $user['id']]);
+        $stmt->execute([$user['id'], $targetId, $user['id'], $targetId]);
 
         // Log activity
         ActivityLogger::log($user['id'], 'follow_user', $targetId, 'user');
@@ -33,9 +41,9 @@ class FollowController {
         $targetId = (int)$params['id'];
 
         $stmt = $pdo->prepare(
-            "DELETE FROM followers WHERE user_id = ? AND follower_id = ?"
+            "DELETE FROM followers WHERE follower_id = ? AND following_id = ?"
         );
-        $stmt->execute([$targetId, $user['id']]);
+        $stmt->execute([$user['id'], $targetId]);
 
         // Log activity
         ActivityLogger::log($user['id'], 'unfollow_user', $targetId, 'user');

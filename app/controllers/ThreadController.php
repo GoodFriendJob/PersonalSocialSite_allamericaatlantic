@@ -11,17 +11,21 @@ class ThreadController {
         $user = AuthMiddleware::requireAuth();
         list($page, $limit, $offset) = Pagination::getPageLimit();
 
+        // NOTE: message_threads has no created_at column in the shipped schema —
+        // only last_message_at. Ordering and the returned timestamp both use it.
         $stmt = $pdo->prepare(
-            "SELECT t.id, t.created_at,
-                    u.username AS other_user
+            "SELECT t.id, t.last_message_at,
+                    u.id       AS other_user_id,
+                    u.username AS other_user,
+                    COALESCE(NULLIF(u.profile_pic, ''), 'assets/img/default-avatar.svg') AS other_profile_pic
              FROM message_threads t
-             JOIN users u ON 
-                (CASE 
-                    WHEN t.user1_id = :id THEN t.user2_id 
-                    ELSE t.user1_id 
+             JOIN users u ON
+                (CASE
+                    WHEN t.user1_id = :id THEN t.user2_id
+                    ELSE t.user1_id
                  END) = u.id
              WHERE t.user1_id = :id OR t.user2_id = :id
-             ORDER BY t.created_at DESC
+             ORDER BY t.last_message_at DESC, t.id DESC
              LIMIT :limit OFFSET :offset"
         );
 
@@ -76,7 +80,7 @@ class ThreadController {
 
         // Create new thread
         $stmt = $pdo->prepare(
-            "INSERT INTO message_threads (user1_id, user2_id, created_at)
+            "INSERT INTO message_threads (user1_id, user2_id, last_message_at)
              VALUES (?, ?, NOW())"
         );
         $stmt->execute([$user['id'], $other_id]);

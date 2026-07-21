@@ -162,6 +162,50 @@ class FriendController
     }
 
     /* ------------------------------------------------------------------
+       Every other member, annotated with my relationship to them.
+
+       Powers the "My Network" tab. Same relationship states as search()
+       (none | pending_sent | pending_received | accepted | blocked) so the
+       row can render Add / Cancel / Accept / Friends without a second call.
+    ------------------------------------------------------------------ */
+    public static function fetchMembers(int $meId): array
+    {
+        global $pdo;
+
+        $isOnline = Presence::sqlIsOnline('u');
+
+        $stmt = $pdo->prepare("
+            SELECT u.id, u.username, u.first_name, u.last_name, u.profile_pic, u.sport, u.position,
+                   $isOnline AS is_online,
+                   f.status  AS rel_status,
+                   f.user_id AS rel_requester
+              FROM users u
+              LEFT JOIN friends f
+                     ON (f.user_id = :me AND f.friend_id = u.id)
+                     OR (f.friend_id = :me2 AND f.user_id = u.id)
+             WHERE u.id <> :me3
+               AND u.banned = 0
+             ORDER BY is_online DESC, u.username
+             LIMIT 200
+        ");
+        $stmt->execute(['me' => $meId, 'me2' => $meId, 'me3' => $meId]);
+
+        $members = [];
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $member = self::shapeUser($row);
+            $member['friendship'] = self::describeRelationship(
+                $row['rel_status'] ?? null,
+                $row['rel_requester'] ?? null,
+                $meId
+            );
+            unset($member['rel_status'], $member['rel_requester']);
+            $members[] = $member;
+        }
+
+        return $members;
+    }
+
+    /* ------------------------------------------------------------------
        GET friends/network — everything the sidebar renders, in one call
 
        The sidebar needs three lists at once. Fetching them as three requests
@@ -179,6 +223,7 @@ class FriendController
             'friends'      => $friends,
             'requests'     => self::fetchPending($me['id']),
             'sent'         => self::fetchSent($me['id']),
+            'members'      => self::fetchMembers($me['id']),
             'online_count' => count(array_filter($friends, function ($friend) {
                 return $friend['is_online'];
             })),

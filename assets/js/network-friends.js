@@ -1,363 +1,223 @@
-/**
- * Network Friends sidebar: online friends, incoming requests, sent requests.
- *
- * Previously this talked to app/routes/get_friends.php, search_users.php and
- * send_request.php — standalone scripts with no accept, no decline and no
- * cancel, so a request could be sent but never answered. It now uses the
- * router-backed FriendController, which owns the whole lifecycle and writes
- * the notification rows the rest of the app expects.
- */
 (function () {
   "use strict";
 
-  const friendsList = document.getElementById("friendsList");
-  const onlineCount = document.getElementById("onlineCount");
-  const requestsBlock = document.getElementById("friend-requests-block");
-  const requestsList = document.getElementById("friend-requests-list");
-  const requestsCount = document.getElementById("friend-requests-count");
-  const sentBlock = document.getElementById("friend-sent-block");
-  const sentList = document.getElementById("friend-sent-list");
-  const sentCount = document.getElementById("friend-sent-count");
-  const statusLine = document.getElementById("friend-network-status");
-  const searchInput = document.getElementById("friend-search-input");
-  const searchDropdown = document.getElementById("search-results-dropdown");
-  const addFriendBtn = document.getElementById("add-friend-submit-btn");
-
-  if (!friendsList) return;
-
-  /** Presence counts someone online for 5 minutes; refresh a little inside that. */
-  const REFRESH_MS = 60000;
-
-  /* ------------------------------------------------------------------ */
-  /* Transport                                                           */
-  /* ------------------------------------------------------------------ */
-
-  function apiUrl(route) {
-    const separator = route.indexOf("?");
-    const path = separator === -1 ? route : route.slice(0, separator);
-    const query = separator === -1 ? "" : `&${route.slice(separator + 1)}`;
-    const relative = `app/index.php?route=${encodeURIComponent(path)}${query}`;
-    // appUrl is defined by main.js, which loads first; guard anyway so the
-    // sidebar degrades to a relative URL rather than throwing.
-    return typeof appUrl === "function" ? appUrl(relative) : relative;
-  }
-
-  async function apiRequest(route, options) {
-    const response = await fetch(apiUrl(route), {
-      credentials: "same-origin",
-      ...(options || {}),
-    });
-    const raw = await response.text();
-    let data;
-    try {
-      data = JSON.parse(raw);
-    } catch (_) {
-      throw new Error("The network server returned an invalid response.");
-    }
-    if (!response.ok || data.error || data.success === false) {
-      throw new Error(data.error || data.message || "The network request failed.");
-    }
-    return data;
-  }
-
-  function showStatus(message, isError) {
-    if (!statusLine) return;
-    statusLine.textContent = message || "";
-    statusLine.classList.toggle("is-error", Boolean(isError));
-    if (message) {
-      window.setTimeout(() => {
-        if (statusLine.textContent === message) statusLine.textContent = "";
-      }, 4000);
-    }
-  }
-
-  /* ------------------------------------------------------------------ */
-  /* Rendering                                                           */
-  /* ------------------------------------------------------------------ */
-
-  function avatarFor(person, extraClass) {
-    const wrapper = document.createElement("div");
-    wrapper.className = "avatar-container";
-
-    const img = document.createElement("img");
-    img.className = extraClass || "avatar";
-    img.src = person.profile_pic || "assets/img/default-avatar.svg";
-    img.alt = "";
-    img.addEventListener("error", () => {
-      img.src = "assets/img/default-avatar.svg";
-    }, { once: true });
-    wrapper.appendChild(img);
-
-    return wrapper;
-  }
-
-  function renderFriends(friends) {
-    friendsList.replaceChildren();
-
-    if (!friends.length) {
-      const empty = document.createElement("li");
-      empty.className = "loading-friends";
-      empty.textContent = "No friends in your network yet.";
-      friendsList.appendChild(empty);
-      return;
-    }
-
-    friends.forEach((friend) => {
-      const item = document.createElement("li");
-      item.className = "friend-item";
-
-      const avatar = avatarFor(friend);
-      const indicator = document.createElement("div");
-      indicator.className = `status-indicator ${friend.is_online ? "online" : "offline"}`;
-      avatar.appendChild(indicator);
-
-      const info = document.createElement("div");
-      info.className = "friend-info";
-      const name = document.createElement("h4");
-      name.textContent = friend.display_name || friend.username;
-      const status = document.createElement("p");
-      status.textContent = friend.is_online ? "Active Now" : "Offline";
-      info.append(name, status);
-
-      item.append(avatar, info);
-      friendsList.appendChild(item);
-    });
-  }
-
-  /**
-   * One row builder for both request lists. `actions` is a list of
-   * [label, className, handler] — incoming gets Accept/Decline, outgoing
-   * gets Cancel.
-   */
-  function renderRequestRows(list, block, counter, people, actions) {
-    if (!list || !block) return;
-
-    list.replaceChildren();
-    block.hidden = people.length === 0;
-    if (counter) counter.textContent = String(people.length);
-
-    people.forEach((person) => {
-      const row = document.createElement("li");
-      row.className = "request-row";
-
-      const info = document.createElement("div");
-      info.className = "request-info";
-      const name = document.createElement("p");
-      name.className = "request-name";
-      name.textContent = person.display_name || person.username;
-      const handle = document.createElement("p");
-      handle.className = "request-handle";
-      handle.textContent = `@${person.username}`;
-      info.append(name, handle);
-
-      const buttons = document.createElement("div");
-      buttons.className = "request-actions";
-
-      actions.forEach(([label, className, handler]) => {
-        const button = document.createElement("button");
-        button.type = "button";
-        button.className = className;
-        button.textContent = label;
-        button.addEventListener("click", async () => {
-          // Disable the whole row: accept and decline race on the same row.
-          const rowButtons = buttons.querySelectorAll("button");
-          rowButtons.forEach((b) => (b.disabled = true));
-          try {
-            await handler(person);
-            await loadNetwork();
-          } catch (error) {
-            showStatus(error.message, true);
-            rowButtons.forEach((b) => (b.disabled = false));
-          }
-        });
-        buttons.appendChild(button);
-      });
-
-      row.append(avatarFor(person, "avatar avatar-small"), info, buttons);
-      list.appendChild(row);
-    });
-  }
-
-  /* ------------------------------------------------------------------ */
-  /* Actions                                                             */
-  /* ------------------------------------------------------------------ */
-
-  const acceptRequest = (person) =>
-    apiRequest(`friends/${person.id}/accept`, { method: "POST" });
-
-  const declineRequest = (person) =>
-    apiRequest(`friends/${person.id}/decline`, { method: "POST" });
-
-  // Cancelling a request I sent and unfriending are the same delete.
-  const cancelRequest = (person) =>
-    apiRequest(`friends/${person.id}`, { method: "DELETE" });
-
-  const sendRequest = (userId) =>
-    apiRequest(`friends/${userId}/request`, { method: "POST" });
-
-  /* ------------------------------------------------------------------ */
-  /* Loading                                                             */
-  /* ------------------------------------------------------------------ */
-
-  async function loadNetwork() {
-    try {
-      const data = await apiRequest("friends/network");
-
-      renderFriends(data.friends || []);
-      if (onlineCount) onlineCount.textContent = `${data.online_count || 0} Online`;
-
-      renderRequestRows(requestsList, requestsBlock, requestsCount, data.requests || [], [
-        ["Accept", "request-accept", acceptRequest],
-        ["Decline", "request-decline", declineRequest],
-      ]);
-
-      renderRequestRows(sentList, sentBlock, sentCount, data.sent || [], [
-        ["Cancel", "request-cancel", cancelRequest],
-      ]);
-    } catch (error) {
-      console.error("Error fetching friends network:", error);
-      friendsList.replaceChildren();
-      const failed = document.createElement("li");
-      failed.className = "loading-friends";
-      failed.textContent = "Could not load your network.";
-      friendsList.appendChild(failed);
-    }
-  }
-
-  /* ------------------------------------------------------------------ */
-  /* Search and add                                                      */
-  /* ------------------------------------------------------------------ */
-
-  const RELATIONSHIP_LABELS = {
-    accepted: "Friends",
-    pending_sent: "Requested",
-    pending_received: "Accept",
-    blocked: "Unavailable",
+  const state = {
+    activeView: "network",
+    friends: [],
+    network: [],
+    loading: false,
   };
 
-  function renderSearchResults(results) {
-    if (!searchDropdown) return;
+  document.addEventListener("DOMContentLoaded", () => {
+    const searchInput = document.getElementById("friend-search-input");
+    const resultsDropdown = document.getElementById("search-results-dropdown");
+    const viewButtons = document.querySelectorAll("[data-network-view]");
 
-    searchDropdown.replaceChildren();
-    searchDropdown.style.display = "block";
-
-    if (!results.length) {
-      const empty = document.createElement("li");
-      empty.className = "search-empty";
-      empty.textContent = "No members found";
-      searchDropdown.appendChild(empty);
-      return;
-    }
-
-    results.forEach((user) => {
-      const row = document.createElement("li");
-      row.className = "search-row";
-
-      const label = document.createElement("span");
-      label.className = "search-name";
-      const fullName = [user.first_name, user.last_name].filter(Boolean).join(" ");
-      label.textContent = fullName ? `${fullName} (@${user.username})` : `@${user.username}`;
-
-      const button = document.createElement("button");
-      button.type = "button";
-      button.className = "search-add";
-      button.textContent = RELATIONSHIP_LABELS[user.friendship] || "Add";
-      // Already friends or blocked is terminal; a request I already sent is
-      // not actionable here — cancel it from the Requests sent list instead.
-      button.disabled = user.friendship === "accepted"
-        || user.friendship === "blocked"
-        || user.friendship === "pending_sent";
-
-      button.addEventListener("click", async () => {
-        button.disabled = true;
-        const original = button.textContent;
-        button.textContent = "...";
-        try {
-          // A request from them that I answer with Add is an accept, which is
-          // exactly what the request endpoint does with a mirrored pending row.
-          await sendRequest(user.id);
-          button.textContent = user.friendship === "pending_received" ? "Friends" : "Requested";
-          showStatus(
-            user.friendship === "pending_received"
-              ? `You and @${user.username} are now friends.`
-              : `Friend request sent to @${user.username}.`
-          );
-          await loadNetwork();
-        } catch (error) {
-          button.textContent = original;
-          button.disabled = false;
-          showStatus(error.message, true);
-        }
+    viewButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        state.activeView = button.dataset.networkView === "friends" ? "friends" : "network";
+        renderActiveList();
       });
-
-      row.append(label, button);
-      searchDropdown.appendChild(row);
     });
+
+    if (searchInput && resultsDropdown) {
+      searchInput.addEventListener("input", debounce(async (event) => {
+        const query = event.target.value.trim();
+        if (query.length < 2) {
+          resultsDropdown.replaceChildren();
+          resultsDropdown.style.display = "none";
+          return;
+        }
+        await searchMembers(query, resultsDropdown);
+      }, 300));
+    }
+
+    fetchFriendsNetwork();
+    window.setInterval(() => {
+      if (!document.hidden) fetchFriendsNetwork();
+    }, 60000);
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) fetchFriendsNetwork();
+    });
+  });
+
+  async function fetchFriendsNetwork() {
+    if (state.loading) return;
+    state.loading = true;
+    try {
+      const response = await fetch("app/routes/get_friends.php", {
+        cache: "no-store",
+        headers: { Accept: "application/json" },
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || `Network status update failed: ${response.status}`);
+      }
+
+      state.friends = Array.isArray(data.friends) ? data.friends : [];
+      state.network = Array.isArray(data.network) ? data.network : [];
+      renderActiveList();
+    } catch (error) {
+      console.error("Error fetching friends and network:", error);
+      const list = document.getElementById("friendsList");
+      if (list) {
+        list.innerHTML = '<li class="loading-friends">Friends and network could not be loaded.</li>';
+      }
+    } finally {
+      state.loading = false;
+    }
   }
 
-  async function runSearch(query) {
-    if (!searchDropdown) return;
+  function renderActiveList() {
+    const list = document.getElementById("friendsList");
+    const onlineCount = document.getElementById("onlineCount");
+    const friendsTabCount = document.getElementById("friendsTabCount");
+    const networkTabCount = document.getElementById("networkTabCount");
+    const viewButtons = document.querySelectorAll("[data-network-view]");
+    if (!list) return;
 
-    if (query.length < 2) {
-      searchDropdown.replaceChildren();
-      searchDropdown.style.display = "none";
+    if (friendsTabCount) friendsTabCount.textContent = String(state.friends.length);
+    if (networkTabCount) networkTabCount.textContent = String(state.network.length);
+
+    viewButtons.forEach((button) => {
+      const active = button.dataset.networkView === state.activeView;
+      button.classList.toggle("is-active", active);
+      button.setAttribute("aria-selected", active ? "true" : "false");
+    });
+
+    const members = state.activeView === "friends" ? state.friends : state.network;
+    const online = members.filter((member) => Boolean(member.is_online)).length;
+    if (onlineCount) {
+      const groupName = state.activeView === "friends" ? "friends" : "members";
+      onlineCount.textContent = `${online} Online · ${members.length} ${groupName}`;
+    }
+
+    list.replaceChildren();
+    if (!members.length) {
+      const empty = document.createElement("li");
+      empty.className = "loading-friends";
+      empty.textContent = state.activeView === "friends"
+        ? "No accepted friends yet. Search below to add one."
+        : "No other network members are available yet.";
+      list.appendChild(empty);
       return;
     }
 
-    try {
-      const data = await apiRequest(`friends/search?q=${encodeURIComponent(query)}`);
-      renderSearchResults(data.results || []);
-    } catch (error) {
-      console.error("Error searching for network profiles:", error);
-      showStatus(error.message, true);
+    members.forEach((member) => list.appendChild(createMemberRow(member)));
+  }
+
+  function createMemberRow(member) {
+    const item = document.createElement("li");
+    item.className = `friend-item${member.is_online ? " is-online" : ""}`;
+
+    const profileLink = document.createElement("a");
+    profileLink.className = "friend-profile-link";
+    profileLink.href = appUrl(`profile.php?u=${encodeURIComponent(member.username || "")}`);
+
+    const avatarContainer = document.createElement("span");
+    avatarContainer.className = "avatar-container";
+    const img = document.createElement("img");
+    img.className = "avatar";
+    img.src = member.profile_pic || "assets/img/default-avatar.svg";
+    img.alt = "";
+    const indicator = document.createElement("span");
+    indicator.className = `status-indicator ${member.is_online ? "online" : "offline"}`;
+    avatarContainer.append(img, indicator);
+
+    const info = document.createElement("span");
+    info.className = "friend-info";
+    const name = document.createElement("strong");
+    name.textContent = member.display_name || member.username || "Member";
+    const handle = document.createElement("small");
+    handle.textContent = member.username ? `@${member.username}` : "Network member";
+    const status = document.createElement("span");
+    status.className = `friend-presence${member.is_online ? " is-online" : ""}`;
+    status.textContent = member.is_online ? "Active now" : "Offline";
+    info.append(name, handle, status);
+
+    const badge = document.createElement("span");
+    badge.className = "network-relation-badge";
+    if (member.is_friend) {
+      badge.textContent = "Friend";
+      badge.classList.add("is-friend");
+    } else if (member.is_connection) {
+      badge.textContent = "Connection";
+      badge.classList.add("is-connection");
+    } else {
+      badge.textContent = "Network";
     }
+
+    profileLink.append(avatarContainer, info, badge);
+    item.appendChild(profileLink);
+    return item;
   }
 
-  function debounce(fn, delay) {
-    let timeout;
-    return function (...args) {
-      window.clearTimeout(timeout);
-      timeout = window.setTimeout(() => fn.apply(this, args), delay);
-    };
-  }
+  async function searchMembers(query, resultsDropdown) {
+    try {
+      const response = await fetch(`app/routes/search_users.php?q=${encodeURIComponent(query)}`);
+      const data = await response.json();
+      resultsDropdown.replaceChildren();
+      resultsDropdown.style.display = "block";
 
-  if (searchInput) {
-    searchInput.addEventListener("input", debounce((event) => {
-      runSearch(event.target.value.trim());
-    }, 300));
-  }
-
-  // The Add Friend button has no target of its own — it re-runs the search so
-  // the user picks a specific member, which is the only unambiguous action.
-  if (addFriendBtn) {
-    addFriendBtn.addEventListener("click", () => {
-      const query = searchInput ? searchInput.value.trim() : "";
-      if (query.length < 2) {
-        showStatus("Type at least 2 characters to find a member.", true);
-        if (searchInput) searchInput.focus();
+      if (!data.success || !Array.isArray(data.users) || !data.users.length) {
+        const empty = document.createElement("li");
+        empty.className = "network-search-empty";
+        empty.textContent = "No members found";
+        resultsDropdown.appendChild(empty);
         return;
       }
-      runSearch(query);
+
+      data.users.forEach((user) => {
+        const item = document.createElement("li");
+        item.className = "network-search-result";
+        const label = document.createElement("span");
+        label.textContent = `@${user.username}`;
+        const button = document.createElement("button");
+        button.className = "send-req-btn";
+        button.dataset.id = String(user.id);
+        button.textContent = user.friendship_status === "accepted"
+          ? "Friends"
+          : user.friendship_status ? "Pending" : "Add Friend";
+        button.disabled = Boolean(user.friendship_status);
+        item.append(label, button);
+        resultsDropdown.appendChild(item);
+      });
+      attachRequestButtonListeners(resultsDropdown);
+    } catch (error) {
+      console.error("Error searching for network profiles:", error);
+    }
+  }
+
+  function attachRequestButtonListeners(container) {
+    container.querySelectorAll(".send-req-btn").forEach((button) => {
+      button.addEventListener("click", async function () {
+        const receiverId = this.dataset.id;
+        this.disabled = true;
+        this.textContent = "Sending...";
+        try {
+          const response = await fetch("app/routes/send_request.php", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ receiver_id: receiverId }),
+          });
+          const result = await response.json();
+          if (!response.ok || !result.success) throw new Error(result.error || "Request failed");
+          this.textContent = result.status === "accepted" ? "Friends" : "Pending";
+          await fetchFriendsNetwork();
+        } catch (error) {
+          alert(error.message || "Failed sending request.");
+          this.disabled = false;
+          this.textContent = "Add Friend";
+        }
+      });
     });
   }
 
-  document.addEventListener("click", (event) => {
-    if (!searchDropdown || searchDropdown.style.display === "none") return;
-    if (searchDropdown.contains(event.target) || event.target === searchInput) return;
-    searchDropdown.style.display = "none";
-  });
-
-  /* ------------------------------------------------------------------ */
-
-  loadNetwork();
-
-  // Presence goes stale on its own, and requests arrive while the tab sits
-  // open. Only poll a visible tab — a backgrounded one has nothing to show.
-  window.setInterval(() => {
-    if (document.visibilityState === "visible") loadNetwork();
-  }, REFRESH_MS);
-
-  document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "visible") loadNetwork();
-  });
+  function debounce(func, delay) {
+    let timeout;
+    return function (...args) {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => func.apply(this, args), delay);
+    };
+  }
 })();
