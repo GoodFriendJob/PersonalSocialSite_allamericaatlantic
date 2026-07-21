@@ -55,6 +55,58 @@ class MessageController {
     }
 
     /* -------------------------
+       UNREAD SUMMARY
+       Unread messages addressed to me, grouped by who sent them, so the UI
+       can badge each conversation and raise a "new message" toast.
+    -------------------------- */
+    public static function unread($params) {
+        global $pdo;
+
+        $user = AuthMiddleware::requireAuth();
+
+        $stmt = $pdo->prepare(
+            "SELECT u.id,
+                    u.username,
+                    u.first_name,
+                    u.last_name,
+                    COALESCE(NULLIF(u.profile_pic, ''), 'assets/img/default-avatar.svg') AS profile_pic,
+                    grp.unread,
+                    grp.last_at,
+                    (SELECT m2.content FROM messages m2
+                      WHERE m2.sender_id = u.id AND m2.receiver_id = :me1 AND m2.is_read = 0
+                      ORDER BY m2.created_at DESC, m2.id DESC LIMIT 1) AS last_content
+             FROM (
+                    SELECT sender_id, COUNT(*) AS unread, MAX(created_at) AS last_at
+                    FROM messages
+                    WHERE receiver_id = :me2 AND is_read = 0
+                    GROUP BY sender_id
+                  ) grp
+             JOIN users u ON u.id = grp.sender_id
+             ORDER BY grp.last_at DESC"
+        );
+        $stmt->execute(['me1' => $user['id'], 'me2' => $user['id']]);
+
+        $total = 0;
+        $senders = [];
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $unread = (int)$row['unread'];
+            $total += $unread;
+            $name = trim((string)($row['first_name'] ?? '') . ' ' . (string)($row['last_name'] ?? ''));
+            $senders[] = [
+                'id'           => (int)$row['id'],
+                'username'     => $row['username'],
+                'display_name' => $name !== '' ? $name : ($row['username'] ?: 'Member'),
+                'profile_pic'  => $row['profile_pic'],
+                'unread'       => $unread,
+                'last_content' => $row['last_content'],
+                'last_at'      => $row['last_at'],
+            ];
+        }
+
+        Response::success(['total' => $total, 'senders' => $senders]);
+    }
+
+    /* -------------------------
        SEND MESSAGE
     -------------------------- */
     public static function create($params) {

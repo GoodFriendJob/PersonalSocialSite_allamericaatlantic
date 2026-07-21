@@ -79,6 +79,7 @@ $router->add('GET',    'messages/{id}/reactions', ['MessageReactionController', 
 /* -------------------------
    MESSAGING
 --------------------------*/
+$router->add('GET',  'messages/unread',      ['MessageController', 'unread']);
 $router->add('GET',  'threads',              ['ThreadController', 'index']);
 $router->add('POST', 'threads',              ['ThreadController', 'create']);
 $router->add('GET',  'threads/{id}',         ['ThreadController', 'show']);

@@ -31,6 +31,11 @@
   let els = {};
   const session = { threadId: null, peer: null, meId: Number(window.__CURRENT_USER_ID__) || 0, poll: null, lastId: 0 };
 
+  // Unread tracking: baseline is set silently on first poll so we only toast
+  // for messages that arrive while the page is open.
+  const unread = { total: 0, byUser: {}, known: false, poll: null };
+  let toastHost = null;
+
   document.addEventListener("DOMContentLoaded", () => {
     els = {
       modal: document.getElementById("chat-modal"),
@@ -51,7 +56,99 @@
       if (event.key === "Escape" && !els.modal.hidden) close();
     });
     els.form.addEventListener("submit", onSubmit);
+
+    toastHost = document.createElement("div");
+    toastHost.className = "chat-toast-host";
+    document.body.appendChild(toastHost);
+
+    startUnreadPolling();
   });
+
+  // ---- Unread badge + toast -------------------------------------------------
+  async function refreshUnread() {
+    let data;
+    try {
+      data = await apiRequest("messages/unread");
+    } catch (_) {
+      return; // transient; next tick retries
+    }
+
+    const senders = Array.isArray(data.senders) ? data.senders : [];
+    const nextByUser = {};
+    senders.forEach((sender) => { nextByUser[sender.id] = sender.unread; });
+
+    // Toast only for senders whose unread count grew since the last poll, and
+    // never for the conversation that is currently open on screen.
+    if (unread.known) {
+      senders.forEach((sender) => {
+        const previous = unread.byUser[sender.id] || 0;
+        const openWithThem = !els.modal.hidden && session.peer && Number(session.peer.id) === Number(sender.id);
+        if (sender.unread > previous && !openWithThem) {
+          showToast(sender);
+        }
+      });
+    }
+
+    unread.byUser = nextByUser;
+    unread.total = Number(data.total) || 0;
+    unread.known = true;
+
+    document.dispatchEvent(new CustomEvent("aaa:unread", {
+      detail: { total: unread.total, byUser: unread.byUser, senders },
+    }));
+  }
+
+  function showToast(sender) {
+    if (!toastHost) return;
+    const toast = document.createElement("button");
+    toast.type = "button";
+    toast.className = "chat-toast";
+
+    const avatar = document.createElement("img");
+    avatar.className = "chat-toast-avatar";
+    avatar.src = sender.profile_pic || "assets/img/default-avatar.svg";
+    avatar.alt = "";
+
+    const body = document.createElement("span");
+    body.className = "chat-toast-body";
+    const name = document.createElement("strong");
+    name.textContent = sender.display_name || sender.username || "New message";
+    const text = document.createElement("small");
+    text.textContent = sender.last_content || "sent you a message";
+    body.append(name, text);
+
+    toast.append(avatar, body);
+    toast.addEventListener("click", () => {
+      dismissToast(toast);
+      open({
+        id: sender.id,
+        name: sender.display_name || sender.username || "Member",
+        username: sender.username || "",
+        avatar: sender.profile_pic || "assets/img/default-avatar.svg",
+      });
+    });
+
+    toastHost.appendChild(toast);
+    requestAnimationFrame(() => toast.classList.add("is-visible"));
+    window.setTimeout(() => dismissToast(toast), 7000);
+  }
+
+  function dismissToast(toast) {
+    if (!toast.isConnected) return;
+    toast.classList.remove("is-visible");
+    window.setTimeout(() => toast.remove(), 250);
+  }
+
+  function startUnreadPolling() {
+    refreshUnread();
+    if (unread.poll) window.clearInterval(unread.poll);
+    unread.poll = window.setInterval(() => {
+      if (!document.hidden) refreshUnread();
+    }, 15000);
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) refreshUnread();
+    });
+  }
 
   async function open(peer) {
     if (!els.modal || !peer || !peer.id) return;
@@ -79,6 +176,8 @@
       });
       session.threadId = Number(data.thread_id);
       await loadMessages();
+      // Opening the thread marked its messages read server-side — sync badges.
+      refreshUnread();
       startPolling();
     } catch (error) {
       els.messages.innerHTML = "";
@@ -191,5 +290,11 @@
     return date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
   }
 
-  window.AAAMessenger = { open, close };
+  window.AAAMessenger = {
+    open,
+    close,
+    refreshUnread,
+    unreadFor: (userId) => unread.byUser[userId] || 0,
+    unreadTotal: () => unread.total,
+  };
 })();

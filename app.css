@@ -1930,3 +1930,127 @@ a.profile-handle:hover {
     color: #9cadd2;
 }
 .post-rating-badge.is-unrated .prb-star { color: #6f7896; }
+
+/* ==========================================================================
+   UNREAD MESSAGE INDICATORS — button badge, row cue, header total, toast
+   ========================================================================== */
+
+/* Count bubble sitting on the "Message" button */
+.network-action-btn.has-unread {
+    position: relative;
+    padding-right: 13px;
+}
+.msg-unread-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    display: inline-grid;
+    place-items: center;
+    min-width: 17px;
+    height: 17px;
+    padding: 0 4px;
+    border-radius: 999px;
+    background: #cc0033;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1;
+    box-shadow: 0 0 0 2px #121a36;
+}
+
+/* A friend with unread messages gets a subtle standout + pulsing dot */
+.friend-item.has-unread {
+    border-color: #cc0033;
+    background: #1b1930;
+}
+.friend-item.has-unread .friend-info strong::after {
+    content: "";
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    margin-left: 6px;
+    border-radius: 50%;
+    background: #ff3b63;
+    vertical-align: middle;
+    animation: aaa-unread-pulse 1.6s ease-in-out infinite;
+}
+@keyframes aaa-unread-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: .45; transform: scale(.7); }
+}
+
+/* Total unread badge in the "Friends & Network" header */
+.messages-unread-badge {
+    margin-left: 8px;
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: #cc0033;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+    animation: aaa-badge-pop .25s ease;
+}
+@keyframes aaa-badge-pop {
+    from { transform: scale(.6); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+/* Toast stack (bottom-right, above the chat window) */
+.chat-toast-host {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    z-index: 1300;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+}
+.chat-toast {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    width: min(320px, calc(100vw - 32px));
+    padding: 11px 13px;
+    border: 1px solid #2c3b68;
+    border-left: 3px solid #ff6a2a;
+    border-radius: 12px;
+    background: #121a36;
+    color: #e7ecf9;
+    text-align: left;
+    cursor: pointer;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, .45);
+    pointer-events: auto;
+    transform: translateX(24px);
+    opacity: 0;
+    transition: transform .25s ease, opacity .25s ease;
+}
+.chat-toast.is-visible { transform: translateX(0); opacity: 1; }
+.chat-toast-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex: 0 0 auto;
+}
+.chat-toast-body {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    gap: 2px;
+}
+.chat-toast-body strong { font-size: 13px; }
+.chat-toast-body small {
+    color: #9cadd2;
+    font-size: 12px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 240px;
+}
+
+@media (max-width: 620px) {
+    .chat-toast-host { right: 10px; left: 10px; bottom: 10px; }
+    .chat-toast { width: auto; }
+}

@@ -41,6 +41,10 @@
 
   const els = {};
 
+  // Kept in sync from messages.js via the "aaa:unread" event so friend rows
+  // can badge conversations that have unread messages.
+  let unreadByUser = {};
+
   document.addEventListener("DOMContentLoaded", () => {
     els.list = document.getElementById("friendsList");
     els.onlineCount = document.getElementById("onlineCount");
@@ -53,8 +57,19 @@
     els.sentList = document.getElementById("sentList");
     els.sentCount = document.getElementById("sentCount");
 
+    els.sidebarHeader = document.querySelector(".sidebar-right .sidebar-header");
+
     const searchInput = document.getElementById("friend-search-input");
     const resultsDropdown = document.getElementById("search-results-dropdown");
+
+    // messages.js owns unread state; the sidebar just reflects it.
+    document.addEventListener("aaa:unread", (event) => {
+      unreadByUser = (event.detail && event.detail.byUser) || {};
+      document.querySelectorAll("[data-peer-id]").forEach((button) => {
+        applyUnreadBadge(button, Number(button.dataset.peerId));
+      });
+      updateHeaderBadge((event.detail && event.detail.total) || 0);
+    });
 
     document.querySelectorAll("[data-network-view]").forEach((button) => {
       button.addEventListener("click", () => {
@@ -208,6 +223,52 @@
     return link;
   }
 
+  // "Message" button that also carries an unread badge for this peer.
+  function messageButton(member, row) {
+    const button = actionBtn("Message", "is-primary");
+    button.dataset.peerId = String(member.id);
+    button.addEventListener("click", () => openMessenger(member));
+    applyUnreadBadge(button, member.id, row);
+    return button;
+  }
+
+  function applyUnreadBadge(button, userId, row) {
+    const count = unreadByUser[userId] || 0;
+    const host = row || button.closest(".friend-item");
+    let badge = button.querySelector(".msg-unread-badge");
+    if (count > 0) {
+      if (!badge) {
+        badge = document.createElement("span");
+        badge.className = "msg-unread-badge";
+        button.appendChild(badge);
+      }
+      badge.textContent = count > 9 ? "9+" : String(count);
+      button.classList.add("has-unread");
+      if (host) host.classList.add("has-unread");
+    } else {
+      if (badge) badge.remove();
+      button.classList.remove("has-unread");
+      if (host) host.classList.remove("has-unread");
+    }
+  }
+
+  function updateHeaderBadge(total) {
+    if (!els.sidebarHeader) return;
+    let badge = document.getElementById("messagesUnreadBadge");
+    if (total > 0) {
+      if (!badge) {
+        badge = document.createElement("span");
+        badge.id = "messagesUnreadBadge";
+        badge.className = "messages-unread-badge";
+        badge.title = "Unread messages";
+        els.sidebarHeader.appendChild(badge);
+      }
+      badge.textContent = total > 99 ? "99+" : `${total} new`;
+    } else if (badge) {
+      badge.remove();
+    }
+  }
+
   function actionBtn(label, variant) {
     const button = document.createElement("button");
     button.type = "button";
@@ -224,8 +285,7 @@
     const actions = document.createElement("div");
     actions.className = "friend-actions";
 
-    const message = actionBtn("Message", "is-primary");
-    message.addEventListener("click", () => openMessenger(member));
+    const message = messageButton(member, item);
 
     const remove = actionBtn("Remove", "is-muted");
     remove.addEventListener("click", async () => {
@@ -248,9 +308,7 @@
 
     switch (member.friendship) {
       case "accepted": {
-        const message = actionBtn("Message", "is-primary");
-        message.addEventListener("click", () => openMessenger(member));
-        actions.appendChild(message);
+        actions.appendChild(messageButton(member, item));
         break;
       }
       case "pending_sent": {
